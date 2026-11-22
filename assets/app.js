@@ -9,7 +9,7 @@ const CONFIG = {
   paypalClientId: "BAATOfskCvDsNSaRFFsLZoj1SdUR9JoZqyToYAZx18fjr0bY0c_AVJBbbAiKYw_nZdjsnQ4s8z81-Be_Cs",
   currency: "EUR",
   shipping: [
-    {id: "recogida", label: "Recogida en mano en Parla", price: 0},
+    {id: "recogida", label: "Recogida en mano en Madrid", price: 0},
     {id: "envio", label: "Envío a España peninsular", price: 4.95}
   ]
 };
@@ -98,7 +98,7 @@ const PAGES = [
   if (f) {
     f.className = "site";
     f.innerHTML = `<div class="wrap"><span class="logo">hokane<i></i></span>
-      <div class="meta"><span>Estudio de figuras de resina · Parla, Madrid</span>
+      <div class="meta"><span>Estudio de figuras de resina · Madrid</span>
       <span><a href="ayuda.html#comprar">Cómo comprar</a> · <a href="ayuda.html#faq">Preguntas</a> · <a href="mailto:${CONFIG.email}">${CONFIG.email}</a></span></div></div>`;
   }
   document.getElementById("menuBtn")?.addEventListener("click", e => {
@@ -172,7 +172,7 @@ function toast(msg, withLink) {
   };
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-order]");
-    if (b) openOrder("Hola, me interesa: " + b.dataset.order + ".\n\nMi nombre:\nRecogida en Parla o envío (ciudad):");
+    if (b) openOrder("Hola, me interesa: " + b.dataset.order + ".\n\nMi nombre:\nRecogida en Madrid o envío (ciudad):");
   });
 })();
 
