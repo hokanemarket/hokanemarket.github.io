@@ -67,7 +67,7 @@ const euro = n => n.toLocaleString("es-ES", {style: "currency", currency: "EUR"}
 const PAGES = [
   ["index.html", "Inicio", "inicio"],
   ["colecciones.html", "Colecciones", "colecciones"],
-  ["rol.html", "Rol", "rol"],
+  ["rol.html", "Minis", "rol"],
   ["encargos.html", "Encargos", "encargos"],
   ["ayuda.html", "Ayuda", "ayuda"]
 ];
