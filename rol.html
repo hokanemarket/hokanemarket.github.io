@@ -102,6 +102,6 @@ F.addEventListener("input", calc);
 F.addEventListener("submit", e => { e.preventDefault(); const t = calc(); const v = el => (el.value || "").trim() || "(sin indicar)";
   openOrder(`Hola, quiero un personaje a medida:\n- Nombre: ${v(cName)}\n- Raza: ${v(cRace)}\n- Clase: ${v(cClass)}\n- Tamaño: ${cScale.value}\n- Arma, pose y detalles: ${v(cPose)}\n- Unidades: ${cQty.value || 1}\nPrecio orientativo: ${t} €\n\nMi nombre:\nCiudad y código postal para el envío:`); });
 </script>
-<script src="assets/minis.js?v=6"></script>
+<script src="assets/minis.js?v=7"></script>
 </body>
 </html>
