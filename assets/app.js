@@ -39,7 +39,9 @@ const PRODUCTS = {
   "rol-grupo": {name: "Grupo de aventureros (5 minis)", price: 9, thumb: "R"},
   "rol-goblin": {name: "Horda goblin (10 minis)", price: 16, thumb: "R"},
   "rol-nomuerta": {name: "Guardia no muerta (5 minis)", price: 9, thumb: "R"},
-  "rol-suelta": {name: "Mini suelta", price: 3, thumb: "R"}
+  "rol-tropa": {name: "Tropa suelta", price: 2.5, thumb: "R"},
+  "rol-tropa3": {name: "Tropa suelta (3 minis)", price: 6, thumb: "R"},
+  "rol-suelta": {name: "Personaje suelto", price: 5, thumb: "R"}
 };
 
 function figArt(f, on = true) {
