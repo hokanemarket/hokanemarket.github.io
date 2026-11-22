@@ -12,7 +12,13 @@
       ["ballestero_b", "Ballestero II", "Recargando para la siguiente ronda."]
      ]},
     {id: "aventureros", name: "Grupo de aventureros", desc: "Guerrero, mago, pícaro, clérigo y explorador.", scale: "32 mm", soon: true},
-    {id: "nomuertos", name: "Guardia no muerta", desc: "Esqueletos con escudo y espada.", scale: "28 mm", soon: true}
+    {id: "nomuertos", name: "Guardia no muerta", desc: "Un necromante y su guardia de esqueletos.", scale: "28 mm", pack: "rol-nomuerta", dir: "modelos/nomuertos/", v: 1,
+     minis: [
+      ["necromante", "Necromante", "Bastón de hueso, grimorio y muy pocos amigos vivos."],
+      ["espadachin", "Esqueleto espadachín", "Espada en alto y escudo con calavera."],
+      ["lancero", "Esqueleto lancero", "Casco con cuernos, lanza larga y escudo torre."],
+      ["ballestero", "Esqueleto ballestero", "Apunta desde la segunda fila. Nunca parpadea."]
+     ]}
   ];
   const catsEl = document.getElementById("miniCats"), gal = document.getElementById("miniGal");
   if (!catsEl || !gal) return;
