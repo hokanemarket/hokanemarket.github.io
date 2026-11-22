@@ -2,6 +2,8 @@
 document.documentElement.classList.add("js");
 
 const CONFIG = {
+  // Cambia a true para abrir la tienda y permitir compras.
+  salesOpen: false,
   email: "hokanemarket@gmail.com",
   // Pega aquí el Client ID de tu cuenta PayPal Business para activar el pago online.
   paypalClientId: "BAATOfskCvDsNSaRFFsLZoj1SdUR9JoZqyToYAZx18fjr0bY0c_AVJBbbAiKYw_nZdjsnQ4s8z81-Be_Cs",
@@ -135,6 +137,7 @@ const Cart = (function () {
 Cart.paintCount();
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-add]"); if (!b) return;
+  if (!CONFIG.salesOpen) { toast("La tienda abre muy pronto"); return; }
   const q = b.dataset.qtyFrom ? Math.max(1, parseInt(document.querySelector(b.dataset.qtyFrom).value || "1", 10)) : 1;
   Cart.add(b.dataset.add, q);
 });
@@ -175,6 +178,7 @@ function toast(msg, withLink) {
 
 /* ---------- Aparición al hacer scroll ---------- */
 window.addEventListener("DOMContentLoaded", () => {
+  if (!CONFIG.salesOpen) document.querySelectorAll("[data-add]").forEach(b => { b.disabled = true; b.textContent = "Próximamente"; b.title = "La tienda abre muy pronto"; });
   if ("IntersectionObserver" in window) {
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), {threshold: .1});
     document.querySelectorAll(".rise").forEach((el, i) => { el.style.transitionDelay = (i % 4) * 70 + "ms"; io.observe(el); });
