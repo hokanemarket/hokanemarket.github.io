@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rol y wargames · Hokane</title>
+<meta name="description" content="Minis de resina de 28–32 mm para rol y wargames: packs y personajes a medida.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=Grenze+Gotisch:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="rol">
+<header id="site-header"></header>
+<main>
+  <div class="page-head">
+    <div class="wrap">
+      <h1 class="rpg-title">Rol y wargames</h1>
+      <p>Minis de 28–32 mm con diseños originales. Cada pack sale de la misma tanda, así que todas tienen el mismo acabado. Sin pintar, listas para imprimar.</p>
+    </div>
+  </div>
+  <section style="padding-top:48px">
+    <div class="wrap packs" id="packs"></div>
+  </section>
+  <section id="a-medida">
+    <div class="wrap split">
+      <div class="rise">
+        <span class="label">A medida</span>
+        <h2>Tu personaje, en miniatura</h2>
+        <ol>
+          <li><b>Nos lo describes.</b> Raza, clase, arma y pose; si tienes un dibujo, mejor.</li>
+          <li><b>Te enseñamos el modelo 3D.</b> Pides cambios antes de imprimir.</li>
+          <li><b>Pagas y se imprime.</b> En mano en Parla o por envío.</li>
+        </ol>
+      </div>
+      <form class="card rise" id="customForm" novalidate>
+        <div class="two">
+          <label for="cName">Nombre del personaje<input id="cName" placeholder="Thorgar el Rojo"></label>
+          <label for="cRace">Raza<input id="cRace" placeholder="Enano"></label>
+        </div>
+        <div class="two">
+          <label for="cClass">Clase<input id="cClass" placeholder="Paladín"></label>
+          <label for="cScale">Tamaño
+            <select id="cScale">
+              <option value="32 mm" data-price="10">32 mm · 10 €</option>
+              <option value="54 mm" data-price="18">54 mm · 18 €</option>
+              <option value="75 mm" data-price="28">75 mm · 28 €</option>
+            </select>
+          </label>
+        </div>
+        <label for="cPose">Arma, pose y detalles<textarea id="cPose" placeholder="Martillo a dos manos levantado, barba trenzada, capa al viento"></textarea></label>
+        <label for="cQty">Unidades<input id="cQty" type="number" min="1" max="20" value="1"></label>
+        <div class="sum"><span class="soft">Precio orientativo</span><b class="num" id="cTotal">10 €</b></div>
+        <button class="btn" type="submit">Enviar mi idea <span class="arrow">→</span></button>
+        <p class="soft" style="font-size:.85rem">Primero te enseñamos el modelo; el pago llega cuando te guste.</p>
+      </form>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/app.js"></script>
+<script>
+const PACKS = [
+  ["rol-grupo", "Guerrero, mago, pícaro, clérigo y explorador.", "5 minis", "32 mm"],
+  ["rol-goblin", "Arqueros, lanceros y un jefe con estandarte.", "10 minis", "28 mm"],
+  ["rol-nomuerta", "Esqueletos con escudo y espada.", "5 minis", "28 mm"],
+  ["rol-suelta", "Cualquier mini del catálogo por separado.", "1 mini", "28–32 mm"]
+];
+document.getElementById("packs").innerHTML = PACKS.map(([id, desc, qty, scale]) => {
+  const p = PRODUCTS[id];
+  return `<article class="pack rise"><div class="top"><span>${qty}</span><span>${scale}</span></div><h3>${p.name.replace(/ \(.*\)/, "")}</h3><p class="soft" style="font-size:.95rem">${desc}</p><div class="price num">${p.price} €</div><button class="btn small" type="button" data-add="${id}">Añadir al carrito</button></article>`;
+}).join("");
+const F = document.getElementById("customForm"), tot = document.getElementById("cTotal");
+const calc = () => { const q = Math.max(1, Math.min(20, parseInt(cQty.value || "1", 10))); const t = Number(cScale.selectedOptions[0].dataset.price) * q; tot.textContent = t + " €"; return t; };
+F.addEventListener("input", calc);
+F.addEventListener("submit", e => { e.preventDefault(); const t = calc(); const v = el => (el.value || "").trim() || "(sin indicar)";
+  openOrder(`Hola, quiero un personaje a medida:\n- Nombre: ${v(cName)}\n- Raza: ${v(cRace)}\n- Clase: ${v(cClass)}\n- Tamaño: ${cScale.value}\n- Arma, pose y detalles: ${v(cPose)}\n- Unidades: ${cQty.value || 1}\nPrecio orientativo: ${t} €\n\nMi nombre:\nRecogida en Parla o envío (ciudad):`); });
+</script>
+</body>
+</html>

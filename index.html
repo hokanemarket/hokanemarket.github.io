@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hokane</title>
+<meta name="description" content="Hokane: estudio de figuras de resina en Parla (Madrid). Colecciones propias en caja sorpresa, minis de rol y piezas por encargo.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="inicio">
+<header id="site-header"></header>
+<main>
+  <div class="wrap hero">
+    <div>
+      <h1>Pequeñas<br>figuras,<br>mucho <span>carácter.</span></h1>
+      <p class="intro">Hokane es un estudio de figuras de resina en Parla, Madrid. Creamos personajes propios en cajas sorpresa, minis para tu mesa de rol y piezas únicas por encargo.</p>
+      <div class="row-btns">
+        <a class="btn" href="colecciones.html">Ver las cajas <span class="arrow">→</span></a>
+        <a class="btn line" href="encargos.html">Hacer un encargo</a>
+      </div>
+    </div>
+    <div class="stage">
+      <canvas id="hero3d" data-figure="grieta" aria-label="Figura 3D girando: mueve el ratón encima"></canvas>
+      <div class="caption"><span><b>Grieta</b> · Colección 01</span><span class="num">01 / 07</span></div>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap feature">
+      <div class="scene rise" id="featScene"></div>
+      <div class="panel rise" style="align-content:center">
+        <span class="label">Caja 01 · <b>Próximamente</b></span>
+        <h2>Los Guardianes</h2>
+        <p class="soft">Seis figuras y una secreta, de 7–9 cm. No sabes cuál te toca hasta abrir la caja.</p>
+        <div class="row-btns"><a class="btn" href="colecciones.html#c01">Ver qué puede salir <span class="arrow">→</span></a></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap links">
+      <a class="linkcard rise" href="rol.html">
+        <div><span class="label">Para tu mesa</span><h2>Rol y wargames</h2></div>
+        <div class="go"><p class="soft">Packs de minis de 28–32 mm y tu personaje hecho a medida.</p><span>→</span></div>
+      </a>
+      <a class="linkcard dark rise" href="encargos.html">
+        <div><span class="label" style="color:inherit;opacity:.6">Piezas únicas</span><h2>Encargos</h2></div>
+        <div class="go"><p class="soft">Figuras de 20–30 cm, sin pintar o pintadas a mano.</p><span>→</span></div>
+      </a>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/app.js"></script>
+<script>document.getElementById("featScene").innerHTML = cubeHTML("01", {big: true});</script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="assets/figures.js"></script>
+</body>
+</html>

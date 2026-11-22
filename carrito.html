@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carrito · Hokane</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="carrito">
+<header id="site-header"></header>
+<main>
+  <div class="page-head"><div class="wrap"><h1>Carrito</h1></div></div>
+  <section style="padding-top:40px">
+    <div class="wrap">
+      <div class="cart" id="cartView">
+        <div class="lines" id="lines"></div>
+        <aside class="summary" aria-label="Resumen del pedido">
+          <h3>Resumen</h3>
+          <div class="r"><span class="soft">Subtotal</span><b class="num" id="sub"></b></div>
+          <div class="ship" id="ship" role="radiogroup" aria-label="Entrega"></div>
+          <div class="r tot"><span>Total</span><span class="num" id="total"></span></div>
+          <div id="paypal-buttons"></div>
+          <div id="payFallback" hidden>
+            <p class="notice">El pago online se activa muy pronto. Mientras tanto, envíanos el pedido por correo y te pasamos el enlace de pago.</p>
+            <button class="btn" type="button" id="mailOrder" style="width:100%;margin-top:10px">Enviar pedido por correo</button>
+          </div>
+          <p class="soft" style="font-size:.8rem">Pago seguro con PayPal o tarjeta. Nunca vemos los datos de tu tarjeta.</p>
+        </aside>
+      </div>
+      <div class="empty" id="empty" hidden>
+        <h2>Tu carrito está vacío</h2>
+        <p class="soft">Echa un vistazo a las cajas o a las minis de rol.</p>
+        <div class="row-btns"><a class="btn" href="colecciones.html">Ver colecciones</a><a class="btn line" href="rol.html">Rol y wargames</a></div>
+      </div>
+      <div class="thanks" id="thanks">
+        <h2>¡Gracias por tu pedido!</h2>
+        <p class="soft">Te llegará la confirmación de PayPal por correo y te escribiremos cuando esté listo.</p>
+        <a class="btn" href="index.html">Volver al inicio</a>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/app.js"></script>
+<script>
+let shipId = CONFIG.shipping[0].id;
+const shipPrice = () => CONFIG.shipping.find(s => s.id === shipId).price;
+const total = () => Cart.subtotal() + shipPrice();
+
+document.getElementById("ship").innerHTML = CONFIG.shipping.map((s, i) =>
+  `<label><input type="radio" name="ship" value="${s.id}" ${i === 0 ? "checked" : ""}> <span style="flex:1">${s.label}</span><b class="num">${s.price ? euro(s.price) : "Gratis"}</b></label>`).join("");
+document.getElementById("ship").addEventListener("change", e => { shipId = e.target.value; render(); });
+
+function render() {
+  const items = Cart.items().filter(i => PRODUCTS[i.id]);
+  document.getElementById("cartView").hidden = !items.length;
+  document.getElementById("empty").hidden = !!items.length || document.getElementById("thanks").classList.contains("show");
+  document.getElementById("lines").innerHTML = items.map(i => { const p = PRODUCTS[i.id];
+    return `<div class="cline"><div class="thumb">${p.thumb}</div><div><b>${p.name}</b><br><button class="rm" type="button" data-rm="${i.id}">Quitar</button></div>
+      <div class="qty"><button type="button" data-q="${i.id}" data-d="-1" aria-label="Una menos">−</button><input value="${i.qty}" readonly aria-label="Cantidad"><button type="button" data-q="${i.id}" data-d="1" aria-label="Una más">+</button></div>
+      <b class="num">${euro(p.price * i.qty)}</b></div>`; }).join("");
+  document.getElementById("sub").textContent = euro(Cart.subtotal());
+  document.getElementById("total").textContent = euro(total());
+}
+document.getElementById("lines").addEventListener("click", e => {
+  const q = e.target.closest("[data-q]"), r = e.target.closest("[data-rm]");
+  if (q) { const it = Cart.items().find(i => i.id === q.dataset.q); Cart.set(q.dataset.q, it.qty + Number(q.dataset.d)); render(); }
+  if (r) { Cart.set(r.dataset.rm, 0); render(); }
+});
+render();
+
+function orderText() {
+  const lines = Cart.items().map(i => `- ${i.qty} × ${PRODUCTS[i.id].name} (${euro(PRODUCTS[i.id].price * i.qty)})`).join("\n");
+  const s = CONFIG.shipping.find(x => x.id === shipId);
+  return `Hola, quiero hacer este pedido:\n${lines}\nEntrega: ${s.label} (${s.price ? euro(s.price) : "gratis"})\nTotal: ${euro(total())}\n\nMi nombre:\nDirección de envío (si aplica):`;
+}
+document.getElementById("mailOrder").onclick = () => openOrder(orderText());
+
+/* PayPal: se activa solo cuando hay Client ID en CONFIG */
+if (CONFIG.paypalClientId) {
+  const s = document.createElement("script");
+  s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(CONFIG.paypalClientId)}&currency=${CONFIG.currency}&locale=es_ES&components=buttons&enable-funding=card`;
+  s.onload = () => paypal.Buttons({
+    style: {shape: "pill", label: "pay", height: 46},
+    createOrder: (data, actions) => {
+      const items = Cart.items();
+      return actions.order.create({
+        purchase_units: [{
+          description: "Pedido Hokane",
+          amount: {currency_code: CONFIG.currency, value: total().toFixed(2), breakdown: {
+            item_total: {currency_code: CONFIG.currency, value: Cart.subtotal().toFixed(2)},
+            shipping: {currency_code: CONFIG.currency, value: shipPrice().toFixed(2)}}},
+          items: items.map(i => ({name: PRODUCTS[i.id].name.slice(0, 120), quantity: String(i.qty), unit_amount: {currency_code: CONFIG.currency, value: PRODUCTS[i.id].price.toFixed(2)}}))
+        }],
+        application_context: {shipping_preference: shipId === "envio" ? "GET_FROM_FILE" : "NO_SHIPPING"}
+      });
+    },
+    onApprove: (data, actions) => actions.order.capture().then(() => {
+      Cart.clear(); document.getElementById("cartView").hidden = true; document.getElementById("thanks").classList.add("show");
+    }),
+    onError: () => { document.getElementById("payFallback").hidden = false; toast("No se pudo completar el pago. Puedes enviarnos el pedido por correo."); }
+  }).render("#paypal-buttons").catch(() => { document.getElementById("payFallback").hidden = false; });
+  s.onerror = () => { document.getElementById("payFallback").hidden = false; };
+  document.head.appendChild(s);
+} else {
+  document.getElementById("payFallback").hidden = false;
+}
+</script>
+</body>
+</html>
