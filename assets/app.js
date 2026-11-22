@@ -9,7 +9,6 @@ const CONFIG = {
   paypalClientId: "BAATOfskCvDsNSaRFFsLZoj1SdUR9JoZqyToYAZx18fjr0bY0c_AVJBbbAiKYw_nZdjsnQ4s8z81-Be_Cs",
   currency: "EUR",
   shipping: [
-    {id: "recogida", label: "Recogida en mano en Madrid", price: 0},
     {id: "envio", label: "Envío a España peninsular", price: 4.95}
   ]
 };
@@ -172,7 +171,7 @@ function toast(msg, withLink) {
   };
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-order]");
-    if (b) openOrder("Hola, me interesa: " + b.dataset.order + ".\n\nMi nombre:\nRecogida en Madrid o envío (ciudad):");
+    if (b) openOrder("Hola, me interesa: " + b.dataset.order + ".\n\nMi nombre:\nCiudad y código postal para el envío:");
   });
 })();
 
