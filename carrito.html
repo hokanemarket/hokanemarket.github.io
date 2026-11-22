@@ -78,8 +78,11 @@ function orderText() {
 }
 document.getElementById("mailOrder").onclick = () => openOrder(orderText());
 
-/* PayPal: se activa solo cuando hay Client ID en CONFIG */
-if (CONFIG.paypalClientId) {
+/* PayPal: se activa solo cuando hay Client ID en CONFIG y la tienda está abierta */
+if (!CONFIG.salesOpen) {
+  const fb = document.getElementById("payFallback"); fb.hidden = false;
+  fb.innerHTML = '<p class="notice">La tienda abre muy pronto. Todavía no se pueden hacer compras.</p>';
+} else if (CONFIG.paypalClientId) {
   const s = document.createElement("script");
   s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(CONFIG.paypalClientId)}&currency=${CONFIG.currency}&locale=es_ES&components=buttons&enable-funding=card`;
   s.onload = () => paypal.Buttons({
