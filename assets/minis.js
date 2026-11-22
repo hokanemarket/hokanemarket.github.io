@@ -1,7 +1,7 @@
 /* Hokane · catálogo de minis con visor 3D giratorio */
 (function () {
   const CATS = [
-    {id: "goblins", name: "Horda goblin", desc: "Una banda de goblins con jefe, chamán y tropa.", scale: "28 mm", pack: "rol-goblin", dir: "modelos/goblins/",
+    {id: "goblins", name: "Horda goblin", desc: "Una banda de goblins con jefe, chamán y tropa.", scale: "28 mm", pack: "rol-goblin", dir: "modelos/goblins/", v: 3,
      minis: [
       ["jefe", "Jefe goblin", "Lidera la horda con estandarte y mala leche."],
       ["chaman", "Chamán", "Bastón de hueso, plumas y conjuros dudosos."],
@@ -76,7 +76,7 @@
       ${p ? `<div class="mgal-buy"><span class="price num">${p.price} €</span>${(typeof CONFIG !== "undefined" && !CONFIG.salesOpen) ? `<button class="btn" type="button" disabled title="La tienda abre muy pronto">Próximamente</button>` : `<button class="btn" type="button" data-add="${c.pack}">Añadir el pack <span class="arrow">→</span></button>`}</div>` : ""}</div>
       <div class="mgrid">${c.minis.map(([file, name, txt]) => `<figure class="mini3d"><div class="mstage">${has3D ? `<canvas aria-label="Modelo 3D de ${name}"></canvas>` : ""}<span class="mload">Cargando 3D…</span></div>
       <figcaption><b>${name}</b><small>${txt}</small></figcaption></figure>`).join("")}</div>`;
-    if (has3D) gal.querySelectorAll("canvas").forEach((cv, i) => viewers.push(viewer(cv, c.dir + c.minis[i][0] + ".glb")));
+    if (has3D) gal.querySelectorAll("canvas").forEach((cv, i) => viewers.push(viewer(cv, c.dir + c.minis[i][0] + ".glb?v=" + (c.v || 1))));
     if (location.hash !== "#" + id) history.replaceState(null, "", "#" + id);
     if (scroll) gal.scrollIntoView({behavior: REDUCE ? "auto" : "smooth", block: "start"});
   }
