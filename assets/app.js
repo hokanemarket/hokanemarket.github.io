@@ -36,10 +36,10 @@ const COLLECTIONS = [
 const PRODUCTS = {
   "c01-box": {name: "Caja sorpresa · Colección 01", price: 13, thumb: "01"},
   "c01-set": {name: "Colección 01 completa (6 figuras)", price: 70, thumb: "01"},
-  "rol-grupo": {name: "Grupo de aventureros (5 minis)", price: 15, thumb: "R"},
-  "rol-goblin": {name: "Horda goblin (10 minis)", price: 25, thumb: "R"},
-  "rol-nomuerta": {name: "Guardia no muerta (5 minis)", price: 15, thumb: "R"},
-  "rol-suelta": {name: "Mini suelta", price: 5, thumb: "R"}
+  "rol-grupo": {name: "Grupo de aventureros (5 minis)", price: 9, thumb: "R"},
+  "rol-goblin": {name: "Horda goblin (10 minis)", price: 16, thumb: "R"},
+  "rol-nomuerta": {name: "Guardia no muerta (5 minis)", price: 9, thumb: "R"},
+  "rol-suelta": {name: "Mini suelta", price: 3, thumb: "R"}
 };
 
 function figArt(f, on = true) {
