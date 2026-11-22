@@ -39,7 +39,7 @@
     let alive = true, visible = true, drag = null, rot = 0, vel = 0;
     const fit = () => { const b = canvas.getBoundingClientRect(); if (!b.width) return; r.setSize(b.width, b.height, false); cam.aspect = b.width / b.height; cam.updateProjectionMatrix(); };
     fit(); addEventListener("resize", fit);
-    new THREE.GLTFLoader().load(url, g => {
+    (function(){const L=new THREE.GLTFLoader(); if (window.MeshoptDecoder) L.setMeshoptDecoder(MeshoptDecoder); return L;})().load(url, g => {
       const mat = new THREE.MeshStandardMaterial({color: 0x6f7378, roughness: .5, metalness: .08});
       g.scene.traverse(o => { if (o.isMesh) { o.material = mat; if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals(); } });
       const box = new THREE.Box3().setFromObject(g.scene), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
