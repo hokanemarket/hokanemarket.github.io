@@ -12,13 +12,7 @@
       ["ballestero_b", "Ballestero II", "Recargando para la siguiente ronda."]
      ]},
     {id: "aventureros", name: "Grupo de aventureros", desc: "Guerrero, mago, pícaro, clérigo y explorador.", scale: "32 mm", soon: true},
-    {id: "nomuertos", name: "Guardia no muerta", desc: "Un necromante y su guardia de esqueletos.", scale: "28 mm", pack: "rol-nomuerta", dir: "modelos/nomuertos/", v: 1,
-     minis: [
-      ["necromante", "Necromante", "Bastón de hueso, grimorio y muy pocos amigos vivos."],
-      ["espadachin", "Esqueleto espadachín", "Espada en alto y escudo con calavera."],
-      ["lancero", "Esqueleto lancero", "Casco con cuernos, lanza larga y escudo torre."],
-      ["ballestero", "Esqueleto ballestero", "Apunta desde la segunda fila. Nunca parpadea."]
-     ]}
+    {id: "nomuertos", name: "Guardia no muerta", desc: "Esqueletos con escudo y espada.", scale: "28 mm", soon: true}
   ];
   const catsEl = document.getElementById("miniCats"), gal = document.getElementById("miniGal");
   if (!catsEl || !gal) return;
@@ -51,7 +45,7 @@
       const box = new THREE.Box3().setFromObject(g.scene), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
       g.scene.updateMatrixWorld(true); let bx0=Infinity,bx1=-Infinity,bz0=Infinity,bz1=-Infinity; const P=new THREE.Vector3(); g.scene.traverse(o=>{ if(!o.isMesh) return; const pa=o.geometry.attributes.position; for(let i=0;i<pa.count;i+=3){ P.fromBufferAttribute(pa,i).applyMatrix4(o.matrixWorld); if(P.y<box.min.y+size.y*0.03){ bx0=Math.min(bx0,P.x); bx1=Math.max(bx1,P.x); bz0=Math.min(bz0,P.z); bz1=Math.max(bz1,P.z);} } }); const cx=isFinite(bx0)?(bx0+bx1)/2:c.x, cz=isFinite(bz0)?(bz0+bz1)/2:c.z; g.scene.position.set(-cx, -box.min.y, -cz);
       holder.add(g.scene);
-      const diag = Math.hypot(size.x, size.z) + 2 * Math.hypot(c.x - cx, c.z - cz), vf = cam.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * cam.aspect);
+      const diag = Math.hypot(size.x, size.z), vf = cam.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * cam.aspect);
       const d = Math.max(size.y / 2 / Math.tan(vf), diag / 2 / Math.tan(hf)) * 1.02;
       cam.position.set(0, size.y * .5 + d * .18, d); cam.lookAt(0, size.y * .5, 0);
       canvas.parentElement.classList.add("ready");
