@@ -53,8 +53,9 @@
       g.scene.updateMatrixWorld(true); let bx0=Infinity,bx1=-Infinity,bz0=Infinity,bz1=-Infinity; const P=new THREE.Vector3(); g.scene.traverse(o=>{ if(!o.isMesh) return; const pa=o.geometry.attributes.position; for(let i=0;i<pa.count;i+=3){ P.fromBufferAttribute(pa,i).applyMatrix4(o.matrixWorld); if(P.y<box.min.y+size.y*0.03){ bx0=Math.min(bx0,P.x); bx1=Math.max(bx1,P.x); bz0=Math.min(bz0,P.z); bz1=Math.max(bz1,P.z);} } }); const cx=isFinite(bx0)?(bx0+bx1)/2:c.x, cz=isFinite(bz0)?(bz0+bz1)/2:c.z; g.scene.position.set(-cx, -box.min.y, -cz);
       holder.add(g.scene);
       const diag = Math.hypot(size.x, size.z) + 2 * Math.hypot(c.x - cx, c.z - cz), vf = cam.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * cam.aspect);
-      const d = Math.max(size.y / 2 / Math.tan(vf), diag / 2 / Math.tan(hf)) * 1.02;
-      cam.position.set(0, size.y * .5 + d * .18, d); cam.lookAt(0, size.y * .5, 0);
+      // cámara fija igual para todas: misma escala (todas tienen peana de 25 mm)
+      const VIEW = 58, d = Math.max(VIEW / 2 / Math.tan(vf), 46 / 2 / Math.tan(hf));
+      cam.position.set(0, 25 + d * .16, d); cam.lookAt(0, 23, 0);
       canvas.parentElement.classList.add("ready");
     }, undefined, () => canvas.parentElement.classList.add("err"));
     canvas.addEventListener("pointerdown", e => { drag = e.clientX; vel = 0; canvas.setPointerCapture(e.pointerId); });
