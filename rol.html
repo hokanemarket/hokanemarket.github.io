@@ -4,10 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rol y wargames · Hokane</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="canonical" href="https://hokanemarket.github.io/rol.html">
+<meta name="theme-color" content="#16171a">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hokane">
+<meta property="og:title" content="Rol y wargames · Hokane">
+<meta property="og:description" content="Minis de resina de 28–32 mm para rol y wargames: packs y personajes a medida.">
+<meta property="og:url" content="https://hokanemarket.github.io/rol.html">
+<meta property="og:image" content="https://hokanemarket.github.io/assets/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Minis de resina de 28–32 mm para rol y wargames: packs y personajes a medida.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=Grenze+Gotisch:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=4">
+<link rel="stylesheet" href="assets/styles.css?v=5">
 </head>
 <body data-page="rol">
 <header id="site-header"></header>
@@ -18,8 +32,18 @@
       <p>Minis de 28–32 mm con diseños originales. Cada pack sale de la misma tanda, así que todas tienen el mismo acabado. Sin pintar, listas para imprimar.</p>
     </div>
   </div>
-  <section style="padding-top:48px">
-    <div class="wrap packs" id="packs"></div>
+  <section id="minis" style="padding-top:48px">
+    <div class="wrap">
+      <div class="mhead"><span class="label">Catálogo</span><h2>Elige una categoría</h2></div>
+      <div class="mcats" id="miniCats"></div>
+      <div class="mgal" id="miniGal" hidden></div>
+    </div>
+  </section>
+  <section style="padding-top:24px">
+    <div class="wrap">
+      <div class="mhead"><span class="label">Packs</span><h2>Packs y minis sueltas</h2></div>
+      <div class="packs" id="packs"></div>
+    </div>
   </section>
   <section id="a-medida">
     <div class="wrap split">
@@ -57,11 +81,13 @@
   </section>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/app.js?v=4"></script>
+<script src="assets/app.js?v=5"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
 const PACKS = [
   ["rol-grupo", "Guerrero, mago, pícaro, clérigo y explorador.", "5 minis", "32 mm"],
-  ["rol-goblin", "Arqueros, lanceros y un jefe con estandarte.", "10 minis", "28 mm"],
+  ["rol-goblin", "Jefe, chamán, bombardero, lanceros, arqueros y ballesteros.", "10 minis", "28 mm"],
   ["rol-nomuerta", "Esqueletos con escudo y espada.", "5 minis", "28 mm"],
   ["rol-suelta", "Cualquier mini del catálogo por separado.", "1 mini", "28–32 mm"]
 ];
@@ -75,5 +101,6 @@ F.addEventListener("input", calc);
 F.addEventListener("submit", e => { e.preventDefault(); const t = calc(); const v = el => (el.value || "").trim() || "(sin indicar)";
   openOrder(`Hola, quiero un personaje a medida:\n- Nombre: ${v(cName)}\n- Raza: ${v(cRace)}\n- Clase: ${v(cClass)}\n- Tamaño: ${cScale.value}\n- Arma, pose y detalles: ${v(cPose)}\n- Unidades: ${cQty.value || 1}\nPrecio orientativo: ${t} €\n\nMi nombre:\nCiudad y código postal para el envío:`); });
 </script>
+<script src="assets/minis.js?v=1"></script>
 </body>
 </html>
