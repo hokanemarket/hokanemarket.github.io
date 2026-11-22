@@ -7,7 +7,7 @@
 <meta name="description" content="Minis de resina de 28–32 mm para rol y wargames: packs y personajes a medida.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=Grenze+Gotisch:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=2">
+<link rel="stylesheet" href="assets/styles.css?v=3">
 </head>
 <body data-page="rol">
 <header id="site-header"></header>
@@ -29,7 +29,7 @@
         <ol>
           <li><b>Nos lo describes.</b> Raza, clase, arma y pose; si tienes un dibujo, mejor.</li>
           <li><b>Te enseñamos el modelo 3D.</b> Pides cambios antes de imprimir.</li>
-          <li><b>Pagas y se imprime.</b> En mano en Parla o por envío.</li>
+          <li><b>Pagas y se imprime.</b> En mano en Madrid o por envío.</li>
         </ol>
       </div>
       <form class="card rise" id="customForm" novalidate>
@@ -57,7 +57,7 @@
   </section>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/app.js?v=2"></script>
+<script src="assets/app.js?v=3"></script>
 <script>
 const PACKS = [
   ["rol-grupo", "Guerrero, mago, pícaro, clérigo y explorador.", "5 minis", "32 mm"],
@@ -73,7 +73,7 @@ const F = document.getElementById("customForm"), tot = document.getElementById("
 const calc = () => { const q = Math.max(1, Math.min(20, parseInt(cQty.value || "1", 10))); const t = Number(cScale.selectedOptions[0].dataset.price) * q; tot.textContent = t + " €"; return t; };
 F.addEventListener("input", calc);
 F.addEventListener("submit", e => { e.preventDefault(); const t = calc(); const v = el => (el.value || "").trim() || "(sin indicar)";
-  openOrder(`Hola, quiero un personaje a medida:\n- Nombre: ${v(cName)}\n- Raza: ${v(cRace)}\n- Clase: ${v(cClass)}\n- Tamaño: ${cScale.value}\n- Arma, pose y detalles: ${v(cPose)}\n- Unidades: ${cQty.value || 1}\nPrecio orientativo: ${t} €\n\nMi nombre:\nRecogida en Parla o envío (ciudad):`); });
+  openOrder(`Hola, quiero un personaje a medida:\n- Nombre: ${v(cName)}\n- Raza: ${v(cRace)}\n- Clase: ${v(cClass)}\n- Tamaño: ${cScale.value}\n- Arma, pose y detalles: ${v(cPose)}\n- Unidades: ${cQty.value || 1}\nPrecio orientativo: ${t} €\n\nMi nombre:\nRecogida en Madrid o envío (ciudad):`); });
 </script>
 </body>
 </html>
