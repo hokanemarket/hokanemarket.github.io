@@ -81,7 +81,7 @@
   </section>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/app.js?v=5"></script>
+<script src="assets/app.js?v=6"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/meshopt_decoder.js"></script>
@@ -90,11 +90,13 @@ const PACKS = [
   ["rol-grupo", "Guerrero, mago, pícaro, clérigo y explorador.", "5 minis", "32 mm"],
   ["rol-goblin", "Jefe, chamán, bombardero, lanceros, arqueros y ballesteros.", "10 minis", "28 mm"],
   ["rol-nomuerta", "Necromante con su guardia de esqueletos.", "5 minis", "28 mm"],
-  ["rol-suelta", "Cualquier mini del catálogo por separado.", "1 mini", "28–32 mm"]
+  ["rol-tropa", "Un soldado del catálogo: lancero, arquero, esqueleto…", "1 mini", "28 mm"],
+  ["rol-tropa3", "Tres soldados a elegir, a 2 € cada uno.", "3 minis", "28 mm"],
+  ["rol-suelta", "Jefe, chamán, necromante o cualquier personaje.", "1 mini", "28–32 mm"]
 ];
 document.getElementById("packs").innerHTML = PACKS.map(([id, desc, qty, scale]) => {
   const p = PRODUCTS[id];
-  return `<article class="pack rise"><div class="top"><span>${qty}</span><span>${scale}</span></div><h3>${p.name.replace(/ \(.*\)/, "")}</h3><p class="soft" style="font-size:.95rem">${desc}</p><div class="price num">${p.price} €</div><button class="btn small" type="button" data-add="${id}">Añadir al carrito</button></article>`;
+  return `<article class="pack rise"><div class="top"><span>${qty}</span><span>${scale}</span></div><h3>${p.name.replace(/ \(.*\)/, "")}</h3><p class="soft" style="font-size:.95rem">${desc}</p><div class="price num">${euro(p.price)}</div><button class="btn small" type="button" data-add="${id}">Añadir al carrito</button></article>`;
 }).join("");
 const F = document.getElementById("customForm"), tot = document.getElementById("cTotal");
 const calc = () => { const q = Math.max(1, Math.min(20, parseInt(cQty.value || "1", 10))); const t = Number(cScale.selectedOptions[0].dataset.price) * q; tot.textContent = t + " €"; return t; };
