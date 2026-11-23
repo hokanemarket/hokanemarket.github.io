@@ -16,17 +16,18 @@ const CONFIG = {
 /* ---------- Catálogo ---------- */
 const COLLECTIONS = [
   {
-    id: "c01", num: "01", name: "Los Guardianes", status: "soon",
-    blurb: "Pequeños seres de piedra con una runa encendida dentro. Cada uno guarda una emoción.",
+    id: "c01", num: "01", name: "Los 7 pecados", status: "soon",
+    blurb: "Hoki, el diablillo de Hokane, cae en los siete pecados capitales. Y la secreta se hace la buena.",
     size: "7–9 cm", boxPrice: 13, setPrice: 70, secretOdds: 12, edition: "Limitada",
     figs: [
-      {key: "grieta", name: "Grieta", desc: "Brilla por donde se rompió.", c: "#d6402a"},
-      {key: "musgo", name: "Musgo", desc: "Le ha crecido un jardín encima.", c: "#6f8f4e"},
-      {key: "brasa", name: "Brasa", desc: "Nunca se apaga del todo.", c: "#e2862f"},
-      {key: "niebla", name: "Niebla", desc: "Aparece cuando nadie mira.", c: "#8aa0b3"},
-      {key: "eco", name: "Eco", desc: "Repite lo último que oyó.", c: "#9a82c4"},
-      {key: "lunes", name: "Lunes", desc: "Siempre tiene sueño.", c: "#9b968e"},
-      {key: "secreta", name: "???", reveal: "Runa Dorada", desc: "La figura secreta.", c: "#d6402a", secret: true}
+      {key: "pereza", name: "Pereza", desc: "Dormido en una nube que se derrite.", c: "#8aa0b3", img: "assets/hoki/pereza.webp"},
+      {key: "gula", name: "Gula", desc: "Una tarta más grande que él.", c: "#d6402a", img: "assets/hoki/gula.webp"},
+      {key: "avaricia", name: "Avaricia", desc: "Sentado sobre su tesoro, sin soltar el saco.", c: "#d4a73a", img: "assets/hoki/avaricia.webp"},
+      {key: "ira", name: "Ira", desc: "Rabieta contra su peluche, sobre el relleno.", c: "#d6402a", img: "assets/hoki/ira.webp"},
+      {key: "envidia", name: "Envidia", desc: "Se prueba unos cuernos de demonio grande.", c: "#6f8f4e", img: "assets/hoki/envidia.webp"},
+      {key: "vanidad", name: "Vanidad", desc: "Su espejo, su cojín y su lazo.", c: "#9a82c4", img: "assets/hoki/vanidad.webp"},
+      {key: "soberbia", name: "Soberbia", desc: "Capa, corona y la barbilla bien alta.", c: "#9b968e", img: "assets/hoki/soberbia.webp"},
+      {key: "virtud", name: "???", reveal: "Virtud", desc: "La figura secreta.", c: "#d6402a", secret: true, img: "assets/hoki/virtud.webp"}
     ]
   },
   {id: "c02", num: "02", name: "Por anunciar", status: "future", blurb: "La segunda caja ya está en el taller."},
@@ -35,7 +36,7 @@ const COLLECTIONS = [
 
 const PRODUCTS = {
   "c01-box": {name: "Caja sorpresa · Colección 01", price: 13, thumb: "01"},
-  "c01-set": {name: "Colección 01 completa (6 figuras)", price: 70, thumb: "01"},
+  "c01-set": {name: "Colección 01 completa (7 figuras)", price: 70, thumb: "01"},
   "rol-grupo": {name: "Grupo de aventureros (5 minis)", price: 9, thumb: "R"},
   "rol-goblin": {name: "Horda goblin (10 minis)", price: 16, thumb: "R"},
   "rol-nomuerta": {name: "Guardia no muerta (5 minis)", price: 9, thumb: "R"},
@@ -45,6 +46,10 @@ const PRODUCTS = {
 };
 
 function figArt(f, on = true) {
+  if (f.img) {
+    if (!on && f.secret) return '<svg viewBox="0 0 80 80" aria-hidden="true"><text x="40" y="50" text-anchor="middle" font-size="30" font-weight="800" fill="#9b968e" font-family="sans-serif">?</text></svg>';
+    return `<img src="${f.img}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit${on ? "" : ";filter:grayscale(1);opacity:.25"}">`;
+  }
   const eye = on ? f.c : "#bdb7ad";
   const extra =
     (f.key === "musgo" ? '<path d="M24 22c4-8 28-8 32 0-6-3-26-3-32 0z" fill="#6f8f4e"/>' : "") +
