@@ -11,7 +11,23 @@
       ["ballestero_a", "Ballestero I", "Ballesta cargada y apuntando."],
       ["ballestero_b", "Ballestero II", "Recargando para la siguiente ronda."]
      ]},
-    {id: "aventureros", name: "Grupo de aventureros", desc: "Guerrero, mago, pícaro, clérigo y explorador.", scale: "32 mm", soon: true},
+    {id: "aventureros", name: "Grupo de aventureros", desc: "Catorce héroes para tu partida: guerreros, magos, pícaros, clérigos, exploradores, arqueros y cartógrafos.", scale: "32 mm", pack: "rol-grupo", dir: "modelos/aventureros/", v: 1,
+     minis: [
+      ["guerrero", "Guerrero", "Espada y escudo, siempre en primera línea."],
+      ["guerrera", "Guerrera", "Armadura ligera y escudo redondo."],
+      ["mago_elfo", "Mago elfo", "Bastón de cristal y grimorio abierto."],
+      ["maga_elfa", "Maga elfa", "Túnica bordada y bastón arcano."],
+      ["picaro", "Pícaro", "Encapuchado, con una daga en cada mano."],
+      ["picara", "Pícara", "Agazapada y lista para el golpe."],
+      ["clerigo_enano", "Clérigo enano", "Maza, escudo solar y barba trenzada."],
+      ["enana_clerigo", "Clériga enana", "Maza en alto y escudo sagrado."],
+      ["explorador", "Explorador", "Capa de viaje y espada corta."],
+      ["exploradora", "Exploradora", "Carcaj a la espalda y hoja en mano."],
+      ["arquero", "Arquero", "Flecha cargada y apuntando."],
+      ["arquera_elfa", "Arquera elfa", "Tensando el arco, capa al viento."],
+      ["cartografo", "Cartógrafo", "Gafas, mochila y mapa desplegado."],
+      ["cartografa", "Cartógrafa", "Libro de rutas y brújula."]
+     ]},
     {id: "nomuertos", name: "Guardia no muerta", desc: "Un necromante y su guardia de esqueletos.", scale: "28 mm", pack: "rol-nomuerta", dir: "modelos/nomuertos/", v: 2,
      minis: [
       ["necromante", "Necromante", "Bastón de hueso, grimorio y muy pocos amigos vivos."],
