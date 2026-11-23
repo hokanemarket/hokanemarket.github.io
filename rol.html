@@ -87,7 +87,7 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/meshopt_decoder.js"></script>
 <script>
 const PACKS = [
-  ["rol-grupo", "Guerrero, mago, pícaro, clérigo y explorador.", "5 minis", "32 mm"],
+  ["rol-grupo", "Cinco héroes a elegir entre los 14 de la colección.", "5 minis", "32 mm"],
   ["rol-goblin", "Jefe, chamán, bombardero, lanceros, arqueros y ballesteros.", "10 minis", "28 mm"],
   ["rol-nomuerta", "Necromante con su guardia de esqueletos.", "5 minis", "28 mm"],
   ["rol-tropa", "Un soldado del catálogo: lancero, arquero, esqueleto…", "1 mini", "28 mm"],
@@ -104,6 +104,6 @@ F.addEventListener("input", calc);
 F.addEventListener("submit", e => { e.preventDefault(); const t = calc(); const v = el => (el.value || "").trim() || "(sin indicar)";
   openOrder(`Hola, quiero un personaje a medida:\n- Nombre: ${v(cName)}\n- Raza: ${v(cRace)}\n- Clase: ${v(cClass)}\n- Tamaño: ${cScale.value}\n- Arma, pose y detalles: ${v(cPose)}\n- Unidades: ${cQty.value || 1}\nPrecio orientativo: ${t} €\n\nMi nombre:\nCiudad y código postal para el envío:`); });
 </script>
-<script src="assets/minis.js?v=8"></script>
+<script src="assets/minis.js?v=9"></script>
 </body>
 </html>
