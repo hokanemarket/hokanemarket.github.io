@@ -29,7 +29,7 @@
   <div class="page-head">
     <div class="wrap">
       <h1>Colecciones</h1>
-      <p>Cada colección es una caja. Dentro hay una figura al azar entre seis diseños, y en algunas cajas aparece la secreta. Una caja nueva cada 2–3 meses.</p>
+      <p>Cada colección es una caja. Dentro hay una figura al azar entre siete diseños, y en algunas cajas aparece la secreta. Una caja nueva cada 2–3 meses.</p>
     </div>
   </div>
 
@@ -50,8 +50,8 @@
         </div>
         <div class="panel rise">
           <span class="label">Caja 01 · <b>Próximamente</b></span>
-          <h2>Los Guardianes</h2>
-          <p class="soft">Pequeños seres de piedra con una runa encendida dentro. Cada uno guarda una emoción. Pulsa la caja para probar suerte.</p>
+          <h2>Los 7 pecados</h2>
+          <p class="soft">Hoki, el diablillo de Hokane, cae en los siete pecados capitales. Y la secreta se hace la buena. Pulsa la caja para probar suerte.</p>
           <div class="facts">
             <div><span>Caja sorpresa</span><b class="num">13 €</b></div>
             <div><span>Colección completa</span><b class="num">70 €</b></div>
@@ -67,31 +67,25 @@
             <button class="btn" type="button" data-add="c01-box" data-qty-from="#boxQty">Reservar cajas <span class="arrow">→</span></button>
           </div>
           <button class="btn line" type="button" data-add="c01-set" style="justify-self:start">Colección completa · 70 €</button>
-          <p class="soft" style="font-size:.85rem">La colección completa trae las seis figuras normales. Las reservas se envían en cuanto salga la colección.</p>
+          <p class="soft" style="font-size:.85rem">La colección completa trae las siete figuras normales. Las reservas se envían en cuanto salga la colección.</p>
         </div>
       </div>
 
       <div style="margin-top:72px">
         <div style="display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:24px">
           <h2 style="font-size:clamp(1.6rem,3vw,2.2rem)">Lo que puede salir</h2>
-          <p class="soft num" style="font-size:.95rem">Cajas abiertas: <b id="count" style="color:var(--ink)">0</b> · Álbum: <b id="have" style="color:var(--ink)">0</b>/7</p>
+          <p class="soft num" style="font-size:.95rem">Cajas abiertas: <b id="count" style="color:var(--ink)">0</b> · Álbum: <b id="have" style="color:var(--ink)">0</b>/8</p>
         </div>
         <div class="figs" id="figs"></div>
         <div class="album" id="album" style="margin-top:20px" aria-label="Figuras que has conseguido en la demo"></div>
       </div>
 
-      <div class="viewer rise">
-        <canvas id="viewer3d" aria-label="Visor 3D: arrastra para girar la figura"></canvas>
-        <div class="vtop"><div class="seg"><button type="button" id="spinBtn" aria-pressed="true">Girar</button></div></div>
-        <div class="vtext" id="vtext"><b>Grieta</b><span>Se rompió por dentro y aprendió a brillar por las grietas.</span></div>
-        <span class="vhint">Elige una figura arriba · arrastra para girar</span>
-      </div>
-      <p class="soft" style="font-size:.85rem;margin-top:12px">Diseños y modelos 3D provisionales: los definitivos llegan con la colección.</p>
+      <p class="soft" style="font-size:.85rem;margin-top:16px">Imágenes de los diseños: las fotos de las figuras impresas llegan con la colección.</p>
     </div>
   </section>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/app.js?v=6"></script>
+<script src="assets/app.js?v=7"></script>
 <script>
 const C = COLLECTIONS[0];
 const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -99,7 +93,7 @@ const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
 /* Cajas */
 document.getElementById("boxes").innerHTML = COLLECTIONS.map(c => c.status === "future"
   ? `<div class="boxcard soon rise"><div class="scene">${cubeHTML(c.num, {ghost: true})}</div><div class="row"><h3>Caja ${c.num}</h3><span class="pill">Por anunciar</span></div><p class="soft" style="font-size:.95rem">${c.blurb}</p></div>`
-  : `<a class="boxcard rise" href="#${c.id}"><div class="scene">${cubeHTML(c.num)}</div><div class="row"><h3>Caja ${c.num} · ${c.name}</h3><span class="pill red">Próximamente</span></div><p class="soft" style="font-size:.95rem">${c.blurb}</p><div class="row"><span class="soft" style="font-size:.9rem">6 figuras + 1 secreta</span><b class="num">${c.boxPrice} €</b></div></a>`
+  : `<a class="boxcard rise" href="#${c.id}"><div class="scene">${cubeHTML(c.num)}</div><div class="row"><h3>Caja ${c.num} · ${c.name}</h3><span class="pill red">Próximamente</span></div><p class="soft" style="font-size:.95rem">${c.blurb}</p><div class="row"><span class="soft" style="font-size:.9rem">7 figuras + 1 secreta</span><b class="num">${c.boxPrice} €</b></div></a>`
 ).join("");
 
 /* Lo que puede salir */
@@ -107,12 +101,12 @@ const figs = document.getElementById("figs");
 C.figs.forEach((f, i) => {
   const b = document.createElement("button"); b.type = "button"; b.className = "fig rise" + (f.secret ? " secret" : "");
   b.setAttribute("aria-pressed", i === 0); b.dataset.key = f.key;
-  b.innerHTML = `<div class="art">${figArt(f, !f.secret)}</div><div class="row"><h3>${f.name}</h3><small class="num">${String(i + 1).padStart(2, "0")} / 07</small></div><small>${f.secret ? "1 de cada 12 cajas" : f.desc}</small>`;
-  b.onclick = () => { if (f.secret) return; figs.querySelectorAll(".fig").forEach(x => x.setAttribute("aria-pressed", x === b)); window.HK3D?.show(f.key, f.name); document.querySelector(".viewer").scrollIntoView({behavior: REDUCE ? "auto" : "smooth", block: "center"}); };
+  b.innerHTML = `<div class="art">${figArt(f, !f.secret)}</div><div class="row"><h3>${f.name}</h3><small class="num">${String(i + 1).padStart(2, "0")} / ${String(C.figs.length).padStart(2, "0")}</small></div><small>${f.secret ? "1 de cada 12 cajas" : f.desc}</small>`;
+  b.onclick = () => { if (f.secret) return; figs.querySelectorAll(".fig").forEach(x => x.setAttribute("aria-pressed", x === b)); };
   figs.appendChild(b);
 });
 (() => { const d = document.createElement("div"); d.className = "fig"; d.style.cssText = "background:var(--ink);color:var(--bg);border-color:var(--ink);cursor:default";
-  d.innerHTML = `<div class="art" style="background:transparent;border:1.5px dashed color-mix(in srgb,var(--bg) 35%,transparent)"><span style="font-weight:800;font-size:2rem">?</span></div><div class="row"><h3>Tu caja</h3><small class="num" style="color:inherit;opacity:.6">13 €</small></div><small style="color:inherit;opacity:.6">Una de estas siete, al azar</small>`;
+  d.innerHTML = `<div class="art" style="background:transparent;border:1.5px dashed color-mix(in srgb,var(--bg) 35%,transparent)"><span style="font-weight:800;font-size:2rem">?</span></div><div class="row"><h3>Tu caja</h3><small class="num" style="color:inherit;opacity:.6">13 €</small></div><small style="color:inherit;opacity:.6">Una de estas, al azar</small>`;
   figs.appendChild(d); })();
 
 /* Demo de abrir caja */
@@ -127,7 +121,7 @@ function open() {
   cube.classList.add("shake");
   setTimeout(() => {
     cube.classList.remove("shake"); cube.classList.add("open");
-    const f = Math.random() < 1 / C.secretOdds ? C.figs[6] : C.figs[Math.floor(Math.random() * 6)];
+    const f = Math.random() < 1 / C.secretOdds ? C.figs.find(x => x.secret) : C.figs.filter(x => !x.secret)[Math.floor(Math.random() * C.figs.filter(x => !x.secret).length)];
     const isNew = !have.has(f.key); have.add(f.key); opened++;
     document.getElementById("gotArt").innerHTML = figArt(f, true);
     document.getElementById("gotName").textContent = f.secret ? f.reveal : f.name;
@@ -143,9 +137,5 @@ cube.onclick = open; cube.onkeydown = e => { if (e.key === "Enter" || e.key === 
 /* Cantidad */
 document.querySelectorAll("[data-step]").forEach(b => b.onclick = () => { const i = document.getElementById("boxQty"); i.value = Math.min(20, Math.max(1, (parseInt(i.value, 10) || 1) + Number(b.dataset.step))); });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="assets/figures.js?v=4"></script>
 </body>
 </html>
