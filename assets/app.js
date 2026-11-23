@@ -45,6 +45,7 @@ const PRODUCTS = {
   "rol-suelta": {name: "Personaje suelto", price: 3, thumb: "R"}
 };
 
+(() => { const s = document.createElement("style"); s.textContent = ".art,.slot,.got .mini{position:relative;overflow:hidden;min-width:0}.art>img,.slot>img,.mini>img{position:absolute;inset:0}"; document.head.appendChild(s); })();
 function figArt(f, on = true) {
   if (f.img) {
     if (!on && f.secret) return '<svg viewBox="0 0 80 80" aria-hidden="true"><text x="40" y="50" text-anchor="middle" font-size="30" font-weight="800" fill="#9b968e" font-family="sans-serif">?</text></svg>';
