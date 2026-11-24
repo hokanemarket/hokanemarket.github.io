@@ -39,6 +39,7 @@
           <button type="button" data-tab="ret" aria-selected="false">Devoluciones <span class="pill-mini" id="cntRet" hidden></span></button>
           <button type="button" data-tab="req" aria-selected="false">Encargos <span class="pill-mini" id="cntReq" hidden></span></button>
           <button type="button" data-tab="prod" aria-selected="false">Productos</button>
+          <button type="button" data-tab="m3d" aria-selected="false">Minis 3D</button>
           <button type="button" data-tab="shop" aria-selected="false">Tienda</button>
           <button type="button" data-tab="cup" aria-selected="false">Cupones</button>
           <button type="button" data-tab="cli" aria-selected="false">Clientes</button>
@@ -101,6 +102,29 @@
           </form>
         </div>
 
+        <!-- MINIS 3D -->
+        <div data-pane="m3d" hidden style="display:grid;gap:16px;margin-top:18px">
+          <form class="acc-card" id="mForm" novalidate>
+            <h2 style="font-size:1.3rem;margin:0">Añadir una mini al visor 3D</h2>
+            <p class="soft" style="margin:0;font-size:.92rem">Aparece en la página de <a href="rol.html">Minis</a>, dentro de su categoría, girando como las demás. Se ve en gris resina aunque el modelo tenga color.</p>
+            <div class="adm-two">
+              <label>Categoría
+                <select id="mCat"><option value="goblins">Horda goblin</option><option value="aventureros">Grupo de aventureros</option><option value="nomuertos">Guardia no muerta</option><option value="monstruos">Monstruos y jefes</option></select>
+              </label>
+              <label>Nombre<input type="text" id="mName" maxlength="80" placeholder="Jefe goblin II"></label>
+            </div>
+            <label>Descripción (una línea)<input type="text" id="mDesc" maxlength="140" placeholder="Hacha a dos manos y cara de pocos amigos."></label>
+            <div class="adm-two">
+              <label>Modelo 3D (GLB)<input type="file" id="mGlb" accept=".glb,model/gltf-binary"><small class="soft" id="mSize"></small></label>
+              <label>Orden (menor = sale antes)<input type="number" id="mSort" value="100" step="1"></label>
+            </div>
+            <p class="notice" style="margin:0">Para la web, el GLB debería pesar <b>menos de 15 MB</b>. Los de Tripo sin reducir pesan mucho y tardan en cargar en el móvil. Si pesa más, pásaselo a Claude y te hace la versión ligera.</p>
+            <button class="btn" type="submit" id="mSave" style="justify-self:start">Subir mini</button>
+            <div class="acc-note" id="mNote" role="status"></div>
+          </form>
+          <div class="adm-list" id="mList"></div>
+        </div>
+
         <!-- TIENDA -->
         <div data-pane="shop" hidden style="margin-top:18px">
           <div class="acc-card narrow">
@@ -145,7 +169,7 @@
   </section>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/app.js?v=9"></script>
+<script src="assets/app.js?v=10"></script>
 <script>
 (async () => {
   await HK.whenSupa();
@@ -164,7 +188,7 @@
   document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
     document.querySelectorAll("[data-tab]").forEach(x => x.setAttribute("aria-selected", x === b));
     document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== b.dataset.tab);
-    ({ord: loadOrders, ret: loadReturns, req: loadRequests, prod: loadProducts, shop: loadShop, cup: loadCoupons, cli: loadClients})[b.dataset.tab]();
+    ({m3d: loadMinis, ord: loadOrders, ret: loadReturns, req: loadRequests, prod: loadProducts, shop: loadShop, cup: loadCoupons, cli: loadClients})[b.dataset.tab]();
   });
 
   /* ---------- Productos ---------- */
@@ -404,6 +428,40 @@
     const {error} = await db.from("custom_requests").update(row).eq("id", b.dataset.qsave);
     note(nt, error ? error.message : "Guardado. El cliente ya lo ve en su cuenta.", !error); if (!error) counts();
   });
+
+  /* ---------- Minis 3D ---------- */
+  const CATN = {goblins: "Horda goblin", aventureros: "Grupo de aventureros", nomuertos: "Guardia no muerta", monstruos: "Monstruos y jefes"};
+  $("mGlb").onchange = () => { const f = $("mGlb").files[0]; if (!f) { $("mSize").textContent = ""; return; }
+    const mb = f.size / 1048576; $("mSize").textContent = mb.toFixed(1) + " MB" + (mb > 15 ? " · pesa mucho para la web" : ""); $("mSize").style.color = mb > 15 ? "var(--accent)" : ""; };
+  async function loadMinis() {
+    const {data, error} = await db.from("minis").select("*").order("category").order("sort").order("created_at");
+    if (error) { $("mList").innerHTML = `<p class="acc-note err">${esc(error.message)}</p>`; return; }
+    $("mList").innerHTML = data.map(m => `<div class="adm-row${m.active ? "" : " off"}" style="grid-template-columns:1fr auto auto">
+        <div><b>${esc(m.name)}</b>${m.active ? "" : '<span class="pill-mini">oculta</span>'}<small>${esc(CATN[m.category] || m.category)}${m.description ? " · " + esc(m.description) : ""}</small></div>
+        <button class="btn line small" type="button" data-mtoggle="${m.id}" data-on="${m.active}">${m.active ? "Ocultar" : "Mostrar"}</button>
+        <button class="btn line small" type="button" data-mdel="${m.id}">Borrar</button>
+      </div>`).join("") || '<p class="soft">Todavía no has añadido minis desde aquí. Las que ya estaban en la web siguen igual.</p>';
+  }
+  $("mForm").onsubmit = async e => {
+    e.preventDefault();
+    const name = $("mName").value.trim(), file = $("mGlb").files[0];
+    if (!name) return note($("mNote"), "Ponle un nombre.");
+    if (!file) return note($("mNote"), "Elige el archivo GLB.");
+    $("mSave").disabled = true; note($("mNote"), "Subiendo el modelo…", true);
+    try {
+      const url = await upload(file, "minis", slug($("mCat").value + "-" + name));
+      const {error} = await db.from("minis").insert({category: $("mCat").value, name, description: $("mDesc").value.trim(), model_url: url, sort: parseInt($("mSort").value || "100", 10)});
+      if (error) throw error;
+      note($("mNote"), "Subida. Ya sale en la página de Minis.", true);
+      $("mForm").reset(); $("mSize").textContent = ""; loadMinis(); HK.refresh().catch(() => {});
+    } catch (err) { note($("mNote"), err.message || String(err)); }
+    finally { $("mSave").disabled = false; }
+  };
+  $("mList").onclick = async e => {
+    const t = e.target.closest("[data-mtoggle]"), d = e.target.closest("[data-mdel]");
+    if (t) { await db.from("minis").update({active: t.dataset.on !== "true"}).eq("id", t.dataset.mtoggle); loadMinis(); HK.refresh().catch(() => {}); }
+    if (d) { if (d.dataset.armed) { await db.from("minis").delete().eq("id", d.dataset.mdel); loadMinis(); HK.refresh().catch(() => {}); } else { d.dataset.armed = 1; d.textContent = "¿Seguro?"; } }
+  };
 
   loadOrders();
 })();

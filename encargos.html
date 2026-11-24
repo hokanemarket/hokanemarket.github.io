@@ -12,16 +12,16 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Hokane">
 <meta property="og:title" content="Encargos · Hokane">
-<meta property="og:description" content="Figuras de resina de 20 a 30 cm por encargo, sin pintar o pintadas a mano.">
+<meta property="og:description" content="Figuras de resina por encargo, de 10 a más de 35 cm, sin pintar o pintadas a mano.">
 <meta property="og:url" content="https://hokanemarket.github.io/encargos.html">
 <meta property="og:image" content="https://hokanemarket.github.io/assets/og.png">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta property="og:locale" content="es_ES">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="description" content="Figuras de resina de 20 a 30 cm por encargo, sin pintar o pintadas a mano.">
+<meta name="description" content="Figuras de resina por encargo, de 10 a más de 35 cm, sin pintar o pintadas a mano.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=6">
+<link rel="stylesheet" href="assets/styles.css?v=7">
 </head>
 <body data-page="encargos">
 <header id="site-header"></header>
@@ -29,21 +29,44 @@
   <div class="page-head">
     <div class="wrap">
       <h1>Encargos</h1>
-      <p>Figuras de 20 a 30 cm, impresas por piezas con uniones a medida para que encajen. Tú pones la idea; nosotros el diseño, la impresión y el montaje.</p>
+      <p>Figuras de 10 a más de 35 cm, impresas por piezas con uniones a medida para que encajen. Tú pones la idea; nosotros el diseño, la impresión y el montaje.</p>
     </div>
   </div>
   <section style="padding-top:48px">
     <div class="wrap cols2">
       <div class="plan rise">
-        <h3>Sin pintar</h3><div class="big num">desde 90 €</div>
-        <ul class="soft"><li>Diseño o adaptación del modelo</li><li>Impresión por piezas, lijado y montaje</li><li>Peana incluida</li></ul>
-        <div><button class="btn line" type="button" data-kind="encargo" data-order="Figura por encargo, sin pintar (desde 90 €). Mi idea:">Pedir presupuesto</button></div>
+        <h3>Precios según el tamaño</h3>
+        <table class="ptable">
+          <thead><tr><th>Altura</th><th>Sin pintar</th><th>Pintada a mano</th></tr></thead>
+          <tbody>
+            <tr><td>Hasta 15 cm</td><td class="num">desde 30 €</td><td class="num">desde 60 €</td></tr>
+            <tr><td>15–25 cm</td><td class="num">desde 55 €</td><td class="num">desde 120 €</td></tr>
+            <tr><td>25–35 cm</td><td class="num">desde 90 €</td><td class="num">desde 190 €</td></tr>
+            <tr><td>Más de 35 cm</td><td colspan="2">a presupuesto</td></tr>
+          </tbody>
+        </table>
+        <ul class="soft">
+          <li><b>Sin pintar:</b> diseño o adaptación del modelo, impresión por piezas, lijado, montaje y peana.</li>
+          <li><b>Pintada a mano:</b> todo lo anterior, más imprimación, pintura a pincel, barniz protector y fotos del proceso. Acabado artesanal: cada figura es única.</li>
+        </ul>
+        <p class="soft" style="font-size:.88rem;margin:0">Precios orientativos. El precio final depende de la pose, los detalles y el número de piezas, y te lo damos antes de empezar.</p>
       </div>
-      <div class="plan dark rise">
-        <h3>Pintada a mano</h3><div class="big num">desde 150 €</div>
-        <ul class="soft"><li>Todo lo anterior</li><li>Imprimación, pintura a pincel y barniz protector</li><li>Acabado artesanal: cada figura es única</li><li>Fotos del proceso</li></ul>
-        <div><button class="btn" type="button" data-kind="encargo" data-order="Figura por encargo, pintada a mano (desde 150 €). Mi idea:">Pedir presupuesto</button></div>
-      </div>
+      <form class="plan dark rise" id="encCalc" novalidate>
+        <h3>Calcula tu figura</h3>
+        <label class="enc-l">Altura
+          <select id="eSize">
+            <option value="0">Hasta 15 cm</option>
+            <option value="1" selected>15–25 cm</option>
+            <option value="2">25–35 cm</option>
+            <option value="3">Más de 35 cm</option>
+          </select>
+        </label>
+        <label class="enc-l">Acabado
+          <select id="ePaint"><option value="0">Sin pintar</option><option value="1">Pintada a mano</option></select>
+        </label>
+        <div><span class="soft">Precio orientativo</span><div class="big num" id="eTotal">desde 55 €</div></div>
+        <div><button class="btn line" type="submit" style="background:var(--bg);color:var(--ink);border-color:var(--bg)">Pedir presupuesto <span class="arrow">→</span></button></div>
+      </form>
     </div>
   </section>
   <section>
@@ -59,6 +82,16 @@
   </section>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/app.js?v=9"></script>
+<script src="assets/app.js?v=10"></script>
+<script>
+const EP = [[30, 60], [55, 120], [90, 190], [null, null]], ES = ["hasta 15 cm", "15–25 cm", "25–35 cm", "más de 35 cm"];
+const eCalc = () => { const p = EP[eSize.value][ePaint.value]; eTotal.textContent = p ? `desde ${p} €` : "a presupuesto"; return p; };
+document.getElementById("encCalc").addEventListener("change", eCalc);
+document.getElementById("encCalc").addEventListener("submit", e => {
+  e.preventDefault(); const p = eCalc(), acab = ePaint.value === "1" ? "pintada a mano" : "sin pintar";
+  const resumen = `Figura por encargo, ${ES[eSize.value]}, ${acab} (${p ? "desde " + p + " €" : "a presupuesto"})`;
+  openOrder(`Hola, me interesa: ${resumen}.\nMi idea:\n\nMi nombre:\nCiudad y código postal para el envío:`, "encargo", resumen);
+});
+</script>
 </body>
 </html>
