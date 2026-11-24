@@ -185,22 +185,45 @@ function toast(msg, withLink) {
     <pre id="dText"></pre><p class="soft" style="font-size:.9rem">Correo: <b style="color:var(--ink)">${CONFIG.email}</b></p>
     <div class="dacts" style="margin-top:14px"><button class="btn" type="button" id="dCopy">Copiar mensaje</button>
     <a class="btn line" id="dMail" href="#">Abrir correo</a><button class="btn line" type="button" id="dClose">Cerrar</button></div>
-    <div class="note" id="dNote" role="status"></div>`;
+    <div class="note" id="dNote" role="status"></div>
+    <div id="dAcc" hidden style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px;display:grid;gap:10px">
+      <b>O envíalo desde tu cuenta</b>
+      <textarea id="dIdea" rows="4" placeholder="Cuéntanos tu idea: personaje, tamaño, pose, colores…" style="font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:inherit"></textarea>
+      <button class="btn" type="button" id="dSend">Enviar y guardar en mi cuenta</button>
+    </div>`;
   document.body.appendChild(d);
-  window.openOrder = text => {
+  let reqKind = null, reqSummary = "";
+  window.openOrder = (text, kind, summary) => {
+    reqKind = kind || null; reqSummary = summary || "";
+    document.getElementById("dAcc").hidden = true;
+    if (reqKind && window.HK && HK.whenSupa) HK.whenSupa().then(async () => {
+      if (!HK.ok) return; const db = await HK.client(); const {data: {session}} = await db.auth.getSession();
+      if (session) { document.getElementById("dAcc").hidden = false; document.getElementById("dIdea").value = text.replace(/^Hola,[^\n]*\n?/, "").replace(/\n\nMi nombre:[\s\S]*$/, "").trim(); }
+    }).catch(() => {});
     document.getElementById("dText").textContent = text;
     document.getElementById("dMail").href = "mailto:" + CONFIG.email + "?subject=" + encodeURIComponent("Pedido Hokane") + "&body=" + encodeURIComponent(text);
     document.getElementById("dNote").textContent = "";
     d.showModal ? d.showModal() : d.setAttribute("open", "");
   };
   document.getElementById("dClose").onclick = () => d.close();
+  document.getElementById("dSend").onclick = async () => {
+    const idea = document.getElementById("dIdea").value.trim(), nt = document.getElementById("dNote");
+    if (idea.length < 3) { nt.textContent = "Cuéntanos un poco más de tu idea."; return; }
+    try {
+      const db = await HK.client();
+      const {data, error} = await db.rpc("create_request", {p_kind: reqKind, p_summary: reqSummary, p_details: idea, p_email: ""});
+      if (error) throw error;
+      nt.textContent = `¡Recibido! Tu encargo es el nº ${data}. Lo verás en Mi cuenta y te escribiremos con el presupuesto.`;
+      document.getElementById("dSend").disabled = true;
+    } catch (e) { nt.textContent = "No se pudo enviar desde la cuenta. Usa el correo, por favor."; }
+  };
   document.getElementById("dCopy").onclick = async () => {
     try { await navigator.clipboard.writeText(document.getElementById("dText").textContent); document.getElementById("dNote").textContent = "Copiado. Pégalo en tu correo."; }
     catch (e) { document.getElementById("dNote").textContent = "No se pudo copiar: selecciona el texto y cópialo."; }
   };
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-order]");
-    if (b) openOrder("Hola, me interesa: " + b.dataset.order + ".\n\nMi nombre:\nCiudad y código postal para el envío:");
+    if (b) openOrder("Hola, me interesa: " + b.dataset.order + ".\n\nMi nombre:\nCiudad y código postal para el envío:", b.dataset.kind, b.dataset.order.replace(/\. Mi idea:$/, ""));
   });
 })();
 

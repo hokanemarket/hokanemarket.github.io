@@ -347,3 +347,14 @@ dialog.dlg3d::backdrop{background:rgba(0,0,0,.55)}
 .coupon-box input{flex:1;font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line,#d9d3c7);background:var(--paper);color:inherit;text-transform:uppercase}
 @media (max-width:640px){.adm-two{grid-template-columns:1fr}.adm-row{grid-template-columns:44px 1fr;}.adm-row .th{width:44px;height:44px}.adm-row>.acts{grid-column:1/-1;display:flex;gap:8px}}
 .prose h2{font-size:1.25rem;margin:28px 0 8px}.prose ul{padding-left:1.2em}.prose li{margin:6px 0}
+.hist{display:grid;gap:10px}
+.hcard{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hitems{margin:8px 0 0;padding-left:1.1em;color:var(--soft);font-size:.95rem}
+.st{font-size:.78rem;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--stone);color:var(--ink)}
+.st.ok{background:color-mix(in srgb,#3e8e47 18%,transparent);color:#2f7a39}
+.st.off{background:var(--stone);color:var(--soft)}
+.retform{display:grid;gap:8px;margin-top:8px}
+.retform textarea,.adm-mini{font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:inherit;width:100%}
+.retform textarea{min-height:70px}
+.st.warn{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent)}
