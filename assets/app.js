@@ -36,7 +36,7 @@ const COLLECTIONS = [
 
 const PRODUCTS = {
   "c01-box": {name: "Caja sorpresa · Colección 01", price: 13, thumb: "01"},
-  "c01-set": {name: "Colección 01 completa (7 figuras)", price: 70, thumb: "01"},
+  "c01-set": {name: "Colección 01 completa (8 figuras)", price: 70, thumb: "01"},
   "rol-grupo": {name: "Grupo de aventureros (5 minis)", price: 9, thumb: "R"},
   "rol-goblin": {name: "Horda goblin (10 minis)", price: 16, thumb: "R"},
   "rol-nomuerta": {name: "Guardia no muerta (5 minis)", price: 9, thumb: "R"},
@@ -44,6 +44,23 @@ const PRODUCTS = {
   "rol-tropa3": {name: "Tropa suelta (3 minis)", price: 6, thumb: "R"},
   "rol-suelta": {name: "Personaje suelto", price: 3, thumb: "R"}
 };
+
+/* ---------- Datos de la base (Supabase), con copia guardada en el navegador ---------- */
+const HK = window.HK = window.HK || {};
+HK.apply = function (d) {
+  if (!d || !Array.isArray(d.products)) return;
+  d.products.forEach(p => {
+    if (!p.active) { delete PRODUCTS[p.id]; return; }
+    const old = PRODUCTS[p.id] || {};
+    PRODUCTS[p.id] = {...old, name: p.name, price: Number(p.price), thumb: old.thumb || (p.section === "colecciones" ? "01" : "R"),
+      img: p.image_url || old.img || "", model: p.model_url || "", desc: p.description || "", section: p.section, builtin: !!p.builtin, sort: p.sort};
+  });
+  if (d.settings && "sales_open" in d.settings) CONFIG.salesOpen = d.settings.sales_open === true;
+  const c = COLLECTIONS[0];
+  if (PRODUCTS["c01-box"]) c.boxPrice = PRODUCTS["c01-box"].price;
+  if (PRODUCTS["c01-set"]) c.setPrice = PRODUCTS["c01-set"].price;
+};
+try { HK.apply(JSON.parse(localStorage.getItem("hk-db") || "null")); } catch (e) {}
 
 (() => { const s = document.createElement("style"); s.textContent = ".art,.slot,.got .mini{position:relative;overflow:hidden;min-width:0}.art>img,.slot>img,.mini>img{position:absolute;inset:0}"; document.head.appendChild(s); })();
 function figArt(f, on = true) {
@@ -92,6 +109,9 @@ const PAGES = [
           <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
           <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
         </button>
+        <a class="icon-btn" href="cuenta.html" id="accountBtn" aria-label="Mi cuenta"${page === "cuenta" || page === "admin" ? ' aria-current="page"' : ""}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+        </a>
         <a class="icon-btn" href="carrito.html" aria-label="Carrito"${page === "carrito" ? ' aria-current="page"' : ""}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.5 12h-11z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
           <span class="cart-count" id="cartCount"></span>
@@ -106,7 +126,7 @@ const PAGES = [
     f.className = "site";
     f.innerHTML = `<div class="wrap"><span class="logo">hokane<i></i></span>
       <div class="meta"><span>Estudio de figuras de resina · Madrid</span>
-      <span><a href="ayuda.html#comprar">Cómo comprar</a> · <a href="ayuda.html#faq">Preguntas</a> · <a href="mailto:${CONFIG.email}">${CONFIG.email}</a></span></div></div>`;
+      <span><a href="ayuda.html#comprar">Cómo comprar</a> · <a href="ayuda.html#faq">Preguntas</a> · <a href="privacidad.html">Privacidad</a> · <a href="mailto:${CONFIG.email}">${CONFIG.email}</a></span></div></div>`;
   }
   document.getElementById("menuBtn")?.addEventListener("click", e => {
     const nav = document.getElementById("mainNav"); const open = nav.classList.toggle("open");
@@ -145,6 +165,7 @@ Cart.paintCount();
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-add]"); if (!b) return;
   if (!CONFIG.salesOpen) { toast("La tienda abre muy pronto"); return; }
+  if (!PRODUCTS[b.dataset.add]) { toast("Este producto ya no está disponible"); return; }
   const q = b.dataset.qtyFrom ? Math.max(1, parseInt(document.querySelector(b.dataset.qtyFrom).value || "1", 10)) : 1;
   Cart.add(b.dataset.add, q);
 });
@@ -183,9 +204,26 @@ function toast(msg, withLink) {
   });
 })();
 
+/* ---------- Estado de los botones de compra y precios ---------- */
+HK.paintSales = () => document.querySelectorAll("[data-add]").forEach(b => {
+  if (b.dataset.label == null) b.dataset.label = b.innerHTML;
+  const gone = !PRODUCTS[b.dataset.add], off = !CONFIG.salesOpen || gone;
+  b.disabled = off;
+  b.innerHTML = off ? (gone ? "No disponible" : "Próximamente") : b.dataset.label;
+  b.title = off ? (gone ? "Este producto ya no está disponible" : "La tienda abre muy pronto") : "";
+});
+HK.paintPrices = () => document.querySelectorAll("[data-price-of]").forEach(el => {
+  const p = PRODUCTS[el.dataset.priceOf]; if (p) el.textContent = (el.dataset.prefix || "") + euro(p.price);
+});
+document.addEventListener("hk:data", () => { HK.paintSales(); HK.paintPrices(); });
+
+/* ---------- Conexión con la base de datos (cuentas, productos, ajustes) ---------- */
+HK.whenSupa = () => new Promise(r => HK.client ? r() : document.addEventListener("hk:supa", () => r(), {once: true}));
+if (!document.querySelector('script[src*="supa.js"]')) { const s = document.createElement("script"); s.src = "assets/supa.js?v=1"; s.async = true; document.head.appendChild(s); }
+
 /* ---------- Aparición al hacer scroll ---------- */
 window.addEventListener("DOMContentLoaded", () => {
-  if (!CONFIG.salesOpen) document.querySelectorAll("[data-add]").forEach(b => { b.disabled = true; b.textContent = "Próximamente"; b.title = "La tienda abre muy pronto"; });
+  HK.paintSales(); HK.paintPrices();
   if ("IntersectionObserver" in window) {
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), {threshold: .1});
     document.querySelectorAll(".rise").forEach((el, i) => { el.style.transitionDelay = (i % 4) * 70 + "ms"; io.observe(el); });
