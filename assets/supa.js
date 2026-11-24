@@ -34,7 +34,8 @@
     ]);
     if (p.error) throw p.error;
     if (s.error) throw s.error;
-    const d = {products: p.data, settings: Object.fromEntries(s.data.map(r => [r.key, r.value])), t: Date.now()};
+    const mi = await db.from("minis").select("id,category,name,description,model_url,sort,active").eq("active", true).order("sort").order("created_at");
+    const d = {products: p.data, settings: Object.fromEntries(s.data.map(r => [r.key, r.value])), minis: mi.error ? [] : mi.data, t: Date.now()};
     try { localStorage.setItem("hk-db", JSON.stringify(d)); } catch (e) {}
     HK.data = d;
     HK.apply(d);

@@ -358,3 +358,9 @@ dialog.dlg3d::backdrop{background:rgba(0,0,0,.55)}
 .retform textarea,.adm-mini{font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:inherit;width:100%}
 .retform textarea{min-height:70px}
 .st.warn{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent)}
+.ptable{width:100%;border-collapse:collapse;font-size:.95rem}
+.ptable th,.ptable td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}
+.ptable th{font-size:.82rem;color:var(--soft);font-weight:600}
+.enc-l{display:grid;gap:6px;font-weight:600;color:var(--bg)}
+.enc-l select{font:inherit;font-weight:500;padding:11px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--bg) 35%,transparent);background:color-mix(in srgb,var(--bg) 10%,transparent);color:var(--bg)}
+.enc-l select option{color:#16171a}

@@ -242,7 +242,7 @@ document.addEventListener("hk:data", () => { HK.paintSales(); HK.paintPrices(); 
 
 /* ---------- Conexión con la base de datos (cuentas, productos, ajustes) ---------- */
 HK.whenSupa = () => new Promise(r => HK.client ? r() : document.addEventListener("hk:supa", () => r(), {once: true}));
-if (!document.querySelector('script[src*="supa.js"]')) { const s = document.createElement("script"); s.src = "assets/supa.js?v=1"; s.async = true; document.head.appendChild(s); }
+if (!document.querySelector('script[src*="supa.js"]')) { const s = document.createElement("script"); s.src = "assets/supa.js?v=2"; s.async = true; document.head.appendChild(s); }
 
 /* ---------- Aparición al hacer scroll ---------- */
 window.addEventListener("DOMContentLoaded", () => {

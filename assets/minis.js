@@ -37,19 +37,33 @@
       ["ballestero", "Esqueleto ballestero", "Apunta desde la segunda fila. Nunca parpadea."]
      ]}
   ];
+  CATS.push({id: "monstruos", name: "Monstruos y jefes", desc: "Dragones, trolls y jefes finales para tus partidas.", scale: "32 mm", minis: []});
+  // Minis añadidas desde el panel de administración (se guardan en la base de datos)
+  const base = CATS.map(c => ({...c, minis: c.minis.slice()}));
+  function mergeDb() {
+    let extra = []; try { extra = (JSON.parse(localStorage.getItem("hk-db") || "null") || {}).minis || []; } catch (e) {}
+    CATS.length = 0;
+    base.forEach(c => {
+      const add = extra.filter(m => m.category === c.id).map(m => [m.model_url, m.name, m.description || "", true]);
+      const minis = c.minis.concat(add);
+      CATS.push({...c, minis, soon: minis.length ? false : true});
+    });
+  }
+  mergeDb();
   const catsEl = document.getElementById("miniCats"), gal = document.getElementById("miniGal");
   if (!catsEl || !gal) return;
   const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const has3D = !!(window.THREE && THREE.GLTFLoader);
 
-  catsEl.innerHTML = CATS.map(c => `<button type="button" class="mcat${c.soon ? " soon" : ""}" data-cat="${c.id}" ${c.soon ? "disabled" : ""}>
-    <span class="mcat-top"><span>${c.soon ? "Próximamente" : c.minis.length + " modelos"}</span><span>${c.scale}</span></span>
+  const paintCats = () => catsEl.innerHTML = CATS.map(c => `<button type="button" class="mcat${c.soon ? " soon" : ""}" data-cat="${c.id}" ${c.soon ? "disabled" : ""}>
+    <span class="mcat-top"><span>${c.soon ? "Próximamente" : c.minis.length + (c.minis.length === 1 ? " modelo" : " modelos")}</span><span>${c.scale}</span></span>
     <b>${c.name}</b><small>${c.desc}</small></button>`).join("");
+  paintCats();
 
   let viewers = [];
   function stopAll() { viewers.forEach(v => v.dispose()); viewers = []; }
 
-  function viewer(canvas, url) {
+  function viewer(canvas, url, fitH) {
     const r = new THREE.WebGLRenderer({canvas, antialias: true, alpha: true});
     r.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
     if (r.outputEncoding !== undefined) r.outputEncoding = THREE.sRGBEncoding;
@@ -65,6 +79,7 @@
     (function(){const L=new THREE.GLTFLoader(); if (window.MeshoptDecoder) L.setMeshoptDecoder(MeshoptDecoder); return L;})().load(url, g => {
       const mat = new THREE.MeshStandardMaterial({color: 0x6f7378, roughness: .5, metalness: .08});
       g.scene.traverse(o => { if (o.isMesh) { o.material = mat; if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals(); } });
+      if (fitH) { g.scene.updateMatrixWorld(true); const h0 = new THREE.Box3().setFromObject(g.scene).getSize(new THREE.Vector3()).y || 1; g.scene.scale.multiplyScalar(fitH / h0); g.scene.updateMatrixWorld(true); }
       const box = new THREE.Box3().setFromObject(g.scene), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
       g.scene.updateMatrixWorld(true); let bx0=Infinity,bx1=-Infinity,bz0=Infinity,bz1=-Infinity; const P=new THREE.Vector3(); g.scene.traverse(o=>{ if(!o.isMesh) return; const pa=o.geometry.attributes.position; for(let i=0;i<pa.count;i+=3){ P.fromBufferAttribute(pa,i).applyMatrix4(o.matrixWorld); if(P.y<box.min.y+size.y*0.03){ bx0=Math.min(bx0,P.x); bx1=Math.max(bx1,P.x); bz0=Math.min(bz0,P.z); bz1=Math.max(bz1,P.z);} } }); const cx=isFinite(bx0)?(bx0+bx1)/2:c.x, cz=isFinite(bz0)?(bz0+bz1)/2:c.z; g.scene.position.set(-cx, -box.min.y, -cz);
       holder.add(g.scene);
@@ -98,13 +113,20 @@
     gal.innerHTML = `<div class="mgal-head"><div><span class="label">Categoría</span><h2>${c.name}</h2>
       <p class="soft">Gira cada mini arrastrando. Resina gris sin pintar, base de 25 mm con la marca Hokane.</p></div>
       ${p ? `<div class="mgal-buy"><span class="price num">${p.price} €</span>${(typeof CONFIG !== "undefined" && !CONFIG.salesOpen) ? `<button class="btn" type="button" disabled title="La tienda abre muy pronto">Próximamente</button>` : `<button class="btn" type="button" data-add="${c.pack}">Añadir el pack <span class="arrow">→</span></button>`}</div>` : ""}</div>
-      <div class="mgrid">${c.minis.map(([file, name, txt]) => `<figure class="mini3d"><div class="mstage">${has3D ? `<canvas aria-label="Modelo 3D de ${name}"></canvas>` : ""}<span class="mload">Cargando 3D…</span></div>
-      <figcaption><b>${name}</b><small>${txt}</small></figcaption></figure>`).join("")}</div>`;
-    if (has3D) gal.querySelectorAll("canvas").forEach((cv, i) => viewers.push(viewer(cv, c.dir + c.minis[i][0] + ".glb?v=" + (c.v || 1))));
+      <div class="mgrid">${c.minis.map(([file, name, txt]) => `<figure class="mini3d"><div class="mstage">${has3D ? `<canvas aria-label="Modelo 3D de ${(window.HK && HK.esc) ? HK.esc(name) : name}"></canvas>` : ""}<span class="mload">Cargando 3D…</span></div>
+      <figcaption><b>${(window.HK && HK.esc) ? HK.esc(name) : name}</b><small>${(window.HK && HK.esc) ? HK.esc(txt) : txt}</small></figcaption></figure>`).join("")}</div>`;
+    if (has3D) gal.querySelectorAll("canvas").forEach((cv, i) => { const m = c.minis[i];
+      viewers.push(m[3] ? viewer(cv, m[0], c.id === "monstruos" ? 52 : 40) : viewer(cv, c.dir + m[0] + ".glb?v=" + (c.v || 1))); });
     if (location.hash !== "#" + id) history.replaceState(null, "", "#" + id);
     if (scroll) gal.scrollIntoView({behavior: REDUCE ? "auto" : "smooth", block: "start"});
   }
 
   catsEl.addEventListener("click", e => { const b = e.target.closest(".mcat"); if (b && !b.disabled) open(b.dataset.cat, true); });
   open((location.hash || "").slice(1) || "goblins", !!location.hash);
+  // si llegan minis nuevas de la base, repintar
+  document.addEventListener("hk:data", () => {
+    const before = JSON.stringify(CATS.map(c => c.minis.length)); mergeDb();
+    if (JSON.stringify(CATS.map(c => c.minis.length)) === before) return;
+    paintCats(); const cur = (location.hash || "").slice(1) || "goblins"; open(CATS.some(c => c.id === cur && !c.soon) ? cur : "goblins", false);
+  });
 })();
