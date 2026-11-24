@@ -57,7 +57,9 @@
       </div>
       <div class="thanks" id="thanks">
         <h2>¡Gracias por tu pedido!</h2>
+        <p class="soft" id="thanksNum"></p>
         <p class="soft">Te llegará la confirmación de PayPal por correo y te escribiremos cuando esté listo.</p>
+        <p class="soft" id="thanksAcc"></p>
         <a class="btn" href="index.html">Volver al inicio</a>
       </div>
     </div>
@@ -130,6 +132,31 @@ function orderText() {
 }
 document.getElementById("mailOrder").onclick = () => openOrder(orderText());
 
+/* Registrar el pedido en la base de datos (el precio lo recalcula la base) */
+async function saveOrder(details, items, code) {
+  const num = document.getElementById("thanksNum"), acc = document.getElementById("thanksAcc");
+  const pu = (details.purchase_units || [])[0] || {}, cap = ((pu.payments || {}).captures || [])[0] || {};
+  const payer = details.payer || {}, ship = pu.shipping || null;
+  try {
+    await HK.whenSupa(); if (!HK.ok) throw new Error("sin base");
+    const db = await HK.client();
+    const {data: {session}} = await db.auth.getSession();
+    const {data, error} = await db.rpc("create_order", {
+      p_items: items, p_coupon: code, p_paypal_id: details.id,
+      p_paypal_amount: Number((cap.amount || {}).value || (pu.amount || {}).value || 0),
+      p_email: payer.email_address || "",
+      p_name: [((payer.name || {}).given_name || ""), ((payer.name || {}).surname || "")].join(" ").trim(),
+      p_shipping: ship ? {nombre: (ship.name || {}).full_name || "", ...(ship.address || {})} : null
+    });
+    if (error) throw error;
+    const n = data && data[0] ? data[0].order_number : null;
+    if (n) num.innerHTML = `Tu número de pedido es <b>HK-${String(n).padStart(4, "0")}</b>.`;
+    acc.innerHTML = session ? 'Puedes seguir su estado en <a href="cuenta.html">Mi cuenta</a>.' : '¿Quieres seguir tus pedidos? <a href="cuenta.html">Crea una cuenta</a> con el mismo correo y aparecerán en ella.';
+  } catch (e) {
+    num.innerHTML = `Guarda este código de pago por si lo necesitas: <b>${HK.esc ? HK.esc(details.id) : details.id}</b>.`;
+  }
+}
+
 /* PayPal: se activa solo cuando hay Client ID en CONFIG y la tienda está abierta */
 let payWasOpen = CONFIG.salesOpen;
 document.addEventListener("hk:data", () => { if (CONFIG.salesOpen !== payWasOpen) location.reload(); });
@@ -155,8 +182,10 @@ if (!CONFIG.salesOpen) {
         application_context: {shipping_preference: shipId === "envio" ? "GET_FROM_FILE" : "NO_SHIPPING"}
       });
     },
-    onApprove: (data, actions) => actions.order.capture().then(() => {
-      Cart.clear(); coupon = null; try { localStorage.removeItem("hk-coupon"); } catch (e) {} document.getElementById("cartView").hidden = true; document.getElementById("thanks").classList.add("show");
+    onApprove: (data, actions) => actions.order.capture().then(async details => {
+      const items = live().map(i => ({id: i.id, qty: i.qty})), code = coupon ? coupon.code : null;
+      Cart.clear(); coupon = null; try { localStorage.removeItem("hk-coupon"); } catch (e) {} document.getElementById("cartView").hidden = true;
+      await saveOrder(details, items, code); document.getElementById("thanks").classList.add("show");
     }),
     onError: () => { document.getElementById("payFallback").hidden = false; toast("No se pudo completar el pago. Puedes enviarnos el pedido por correo."); }
   }).render("#paypal-buttons").catch(() => { document.getElementById("payFallback").hidden = false; });

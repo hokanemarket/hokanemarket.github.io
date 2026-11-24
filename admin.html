@@ -35,14 +35,37 @@
 
       <div id="adApp" hidden>
         <div class="acc-tabs" role="tablist">
-          <button type="button" data-tab="prod" aria-selected="true">Productos</button>
+          <button type="button" data-tab="ord" aria-selected="true">Pedidos <span class="pill-mini" id="cntOrd" hidden></span></button>
+          <button type="button" data-tab="ret" aria-selected="false">Devoluciones <span class="pill-mini" id="cntRet" hidden></span></button>
+          <button type="button" data-tab="req" aria-selected="false">Encargos <span class="pill-mini" id="cntReq" hidden></span></button>
+          <button type="button" data-tab="prod" aria-selected="false">Productos</button>
           <button type="button" data-tab="shop" aria-selected="false">Tienda</button>
           <button type="button" data-tab="cup" aria-selected="false">Cupones</button>
           <button type="button" data-tab="cli" aria-selected="false">Clientes</button>
         </div>
 
+        <!-- PEDIDOS -->
+        <div data-pane="ord" style="display:grid;gap:12px;margin-top:18px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <label class="soft" style="font-weight:600">Mostrar
+              <select id="oFilter" class="adm-mini" style="width:auto;margin-left:6px">
+                <option value="abiertos">Por gestionar</option><option value="todos">Todos</option>
+                <option value="pago_en_revision">Pago en revisión</option><option value="pagado">Pagados</option><option value="en_preparacion">En preparación</option>
+                <option value="enviado">Enviados</option><option value="entregado">Entregados</option><option value="cancelado">Cancelados</option><option value="reembolsado">Reembolsados</option>
+              </select></label>
+            <p class="soft" style="margin:0;font-size:.9rem">Antes de pasar un pedido a <b>Pagado</b>, comprueba en PayPal que el cobro existe y que el importe coincide.</p>
+          </div>
+          <div class="hist" id="oList"></div>
+        </div>
+
+        <!-- DEVOLUCIONES -->
+        <div data-pane="ret" hidden style="display:grid;gap:12px;margin-top:18px"><div class="hist" id="rList"></div></div>
+
+        <!-- ENCARGOS -->
+        <div data-pane="req" hidden style="display:grid;gap:12px;margin-top:18px"><div class="hist" id="qList"></div></div>
+
         <!-- PRODUCTOS -->
-        <div data-pane="prod" style="display:grid;gap:16px;margin-top:18px">
+        <div data-pane="prod" hidden style="display:grid;gap:16px;margin-top:18px">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
             <p class="soft" style="margin:0">Los marcados <span class="pill-mini">fijo</span> ya están dibujados en la web: de esos solo cambias nombre, precio y si se ven.</p>
             <button class="btn small" type="button" id="pNew">+ Nuevo producto</button>
@@ -141,7 +164,7 @@
   document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
     document.querySelectorAll("[data-tab]").forEach(x => x.setAttribute("aria-selected", x === b));
     document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== b.dataset.tab);
-    ({prod: loadProducts, shop: loadShop, cup: loadCoupons, cli: loadClients})[b.dataset.tab]();
+    ({ord: loadOrders, ret: loadReturns, req: loadRequests, prod: loadProducts, shop: loadShop, cup: loadCoupons, cli: loadClients})[b.dataset.tab]();
   });
 
   /* ---------- Productos ---------- */
@@ -285,7 +308,104 @@
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = "clientes-hokane.csv"; a.click();
   };
 
-  loadProducts();
+  /* ---------- Pedidos, devoluciones y encargos ---------- */
+  const OST = [["pago_en_revision", "Pago en revisión"], ["pagado", "Pagado"], ["en_preparacion", "En preparación"], ["enviado", "Enviado"], ["entregado", "Entregado"], ["cancelado", "Cancelado"], ["reembolsado", "Reembolsado"]];
+  const RST = [["solicitada", "Solicitada"], ["aceptada", "Aceptada"], ["rechazada", "Rechazada"], ["recibida", "Recibida"], ["reembolsada", "Reembolsada"]];
+  const QST = [["recibido", "Recibido"], ["en_diseno", "En diseño"], ["propuesta_enviada", "Propuesta enviada"], ["aceptado", "Aceptado"], ["en_produccion", "En producción"], ["enviado", "Enviado"], ["cancelado", "Cancelado"]];
+  const opts = (list, v) => list.map(([k, l]) => `<option value="${k}"${k === v ? " selected" : ""}>${l}</option>`).join("");
+  const fecha = d => d ? new Date(d).toLocaleString("es-ES", {day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"}) : "";
+  const num = n => "HK-" + String(n).padStart(4, "0");
+  const addr = a => a ? esc([a.nombre, a.address_line_1, a.address_line_2, [a.postal_code, a.admin_area_2].filter(Boolean).join(" "), a.admin_area_1, a.country_code].filter(Boolean).join(", ")) : "<i>Sin dirección (pídesela por correo)</i>";
+  let orders = [];
+  async function counts() {
+    const [a, b, c] = await Promise.all([
+      db.from("orders").select("id", {count: "exact", head: true}).in("status", ["pago_en_revision", "pagado", "en_preparacion"]),
+      db.from("returns").select("id", {count: "exact", head: true}).in("status", ["solicitada", "aceptada", "recibida"]),
+      db.from("custom_requests").select("id", {count: "exact", head: true}).in("status", ["recibido", "en_diseno", "propuesta_enviada", "aceptado", "en_produccion"])]);
+    [["cntOrd", a.count], ["cntRet", b.count], ["cntReq", c.count]].forEach(([id, n]) => { $(id).textContent = n || ""; $(id).hidden = !n; });
+  }
+  async function loadOrders() {
+    const f = $("oFilter").value;
+    let q = db.from("orders").select("*").order("created_at", {ascending: false}).limit(200);
+    if (f === "abiertos") q = q.in("status", ["pago_en_revision", "pagado", "en_preparacion"]); else if (f !== "todos") q = q.eq("status", f);
+    const {data, error} = await q;
+    if (error) { $("oList").innerHTML = `<p class="acc-note err">${esc(error.message)}</p>`; return; }
+    orders = data;
+    $("oList").innerHTML = data.map(o => { const bad = o.paypal_amount != null && Math.abs(Number(o.paypal_amount) - Number(o.total)) > 0.01;
+      return `<div class="hcard" data-oid="${o.id}">
+        <div class="hrow"><b>${num(o.number)}</b><span class="st">${esc((OST.find(x => x[0] === o.status) || [, o.status])[1])}</span><span class="soft">${fecha(o.created_at)}</span>
+          <span class="soft">${esc(o.name || "")} · ${esc(o.email)}${o.user_id ? "" : " (sin cuenta)"}</span><b class="num" style="margin-left:auto">${euro(Number(o.total))}</b></div>
+        ${bad ? `<p class="st warn" style="display:inline-block;margin:8px 0 0">⚠ PayPal cobró ${euro(Number(o.paypal_amount))} y el pedido vale ${euro(Number(o.total))}. Revísalo antes de enviar.</p>` : ""}
+        <ul class="hitems">${(o.items || []).map(i => `<li>${i.qty} × ${esc(i.name)} (${euro(Number(i.price))})</li>`).join("")}</ul>
+        <p class="soft" style="margin:6px 0 0;font-size:.9rem">Subtotal ${euro(Number(o.subtotal))}${o.coupon ? ` · cupón ${esc(o.coupon)} −${euro(Number(o.discount))}` : ""} · envío ${euro(Number(o.shipping))} · PayPal ${esc(o.paypal_order_id || "—")}</p>
+        <p style="margin:6px 0 0;font-size:.95rem"><b>Enviar a:</b> ${addr(o.shipping_address)}</p>
+        <div class="adm-two" style="margin-top:10px">
+          <label>Estado<select class="adm-mini" data-f="status">${opts(OST, o.status)}</select></label>
+          <label>Transportista<input class="adm-mini" data-f="carrier" value="${esc(o.carrier)}" placeholder="Correos"></label>
+          <label>Nº de seguimiento<input class="adm-mini" data-f="tracking" value="${esc(o.tracking)}"></label>
+          <label>Nota interna<input class="adm-mini" data-f="admin_note" value="${esc(o.admin_note)}"></label>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:10px"><button class="btn small" type="button" data-osave="${o.id}">Guardar</button><span class="acc-note"></span></div>
+      </div>`; }).join("") || '<p class="soft">No hay pedidos aquí.</p>';
+    counts();
+  }
+  $("oFilter").onchange = loadOrders;
+  $("oList").addEventListener("click", async e => {
+    const b = e.target.closest("[data-osave]"); if (!b) return;
+    const card = b.closest("[data-oid]"), row = {}, nt = card.querySelector(".acc-note");
+    card.querySelectorAll("[data-f]").forEach(el => row[el.dataset.f] = el.value.trim());
+    const {error} = await db.from("orders").update(row).eq("id", b.dataset.osave);
+    note(nt, error ? error.message : "Guardado. El cliente ya lo ve en su cuenta.", !error); if (!error) counts();
+  });
+
+  async function loadReturns() {
+    const {data, error} = await db.from("returns").select("*, orders(number, email, total)").order("created_at", {ascending: false}).limit(200);
+    if (error) { $("rList").innerHTML = `<p class="acc-note err">${esc(error.message)}</p>`; return; }
+    $("rList").innerHTML = data.map(r => `<div class="hcard" data-rid="${r.id}">
+        <div class="hrow"><b>Devolución de ${r.orders ? num(r.orders.number) : "—"}</b><span class="st">${esc((RST.find(x => x[0] === r.status) || [, r.status])[1])}</span><span class="soft">${fecha(r.created_at)} · ${esc(r.orders ? r.orders.email : "")}</span>${r.orders ? `<b class="num" style="margin-left:auto">${euro(Number(r.orders.total))}</b>` : ""}</div>
+        <p style="margin:8px 0 0">${esc(r.reason)}</p>
+        <div class="adm-two" style="margin-top:10px">
+          <label>Estado<select class="adm-mini" data-f="status">${opts(RST, r.status)}</select></label>
+          <label>Respuesta al cliente<input class="adm-mini" data-f="admin_note" value="${esc(r.admin_note)}" placeholder="Te enviamos la etiqueta de devolución por correo"></label>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:10px"><button class="btn small" type="button" data-rsave="${r.id}">Guardar</button><span class="acc-note"></span></div>
+        <p class="soft" style="margin:8px 0 0;font-size:.85rem">El reembolso se hace desde PayPal. Cuando lo hagas, marca aquí "Reembolsada" y el pedido como "Reembolsado".</p>
+      </div>`).join("") || '<p class="soft">No hay devoluciones.</p>';
+    counts();
+  }
+  $("rList").addEventListener("click", async e => {
+    const b = e.target.closest("[data-rsave]"); if (!b) return;
+    const card = b.closest("[data-rid]"), row = {}, nt = card.querySelector(".acc-note");
+    card.querySelectorAll("[data-f]").forEach(el => row[el.dataset.f] = el.value.trim());
+    const {error} = await db.from("returns").update(row).eq("id", b.dataset.rsave);
+    note(nt, error ? error.message : "Guardado.", !error); if (!error) counts();
+  });
+
+  async function loadRequests() {
+    const {data, error} = await db.from("custom_requests").select("*").order("created_at", {ascending: false}).limit(200);
+    if (error) { $("qList").innerHTML = `<p class="acc-note err">${esc(error.message)}</p>`; return; }
+    $("qList").innerHTML = data.map(q => `<div class="hcard" data-qid="${q.id}">
+        <div class="hrow"><b>Encargo nº ${q.number}</b><span class="st">${esc((QST.find(x => x[0] === q.status) || [, q.status])[1])}</span><span class="soft">${fecha(q.created_at)} · ${esc(q.email)} · ${q.kind === "mini" ? "Mini a medida" : "Figura grande"}</span></div>
+        ${q.summary ? `<p style="margin:8px 0 0"><b>${esc(q.summary)}</b></p>` : ""}<p class="soft" style="margin:4px 0 0;white-space:pre-line">${esc(q.details)}</p>
+        <div class="adm-two" style="margin-top:10px">
+          <label>Estado<select class="adm-mini" data-f="status">${opts(QST, q.status)}</select></label>
+          <label>Presupuesto (€)<input class="adm-mini" type="number" min="0" step="0.01" data-f="quote" value="${q.quote ?? ""}"></label>
+        </div>
+        <label style="display:grid;gap:6px;margin-top:10px;font-weight:600">Mensaje para el cliente (lo ve en su cuenta)<input class="adm-mini" data-f="admin_note" value="${esc(q.admin_note)}"></label>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:10px"><button class="btn small" type="button" data-qsave="${q.id}">Guardar</button><a class="btn line small" href="mailto:${esc(q.email)}?subject=${encodeURIComponent("Tu encargo nº " + q.number + " · Hokane")}">Escribirle</a><span class="acc-note"></span></div>
+      </div>`).join("") || '<p class="soft">No hay encargos.</p>';
+    counts();
+  }
+  $("qList").addEventListener("click", async e => {
+    const b = e.target.closest("[data-qsave]"); if (!b) return;
+    const card = b.closest("[data-qid]"), row = {}, nt = card.querySelector(".acc-note");
+    card.querySelectorAll("[data-f]").forEach(el => row[el.dataset.f] = el.value.trim());
+    row.quote = row.quote === "" ? null : Number(row.quote);
+    const {error} = await db.from("custom_requests").update(row).eq("id", b.dataset.qsave);
+    note(nt, error ? error.message : "Guardado. El cliente ya lo ve en su cuenta.", !error); if (!error) counts();
+  });
+
+  loadOrders();
 })();
 </script>
 </body>

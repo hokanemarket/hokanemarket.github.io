@@ -71,6 +71,11 @@
           <button class="btn line small" type="button" id="meDel">Borrar mi cuenta</button>
         </details>
       </div>
+      <div id="acHist" hidden style="display:grid;gap:28px;margin-top:32px">
+        <div><h2 style="font-size:1.4rem;margin:0 0 12px">Mis pedidos</h2><div class="hist" id="hOrders"></div></div>
+        <div id="hRetWrap" hidden><h2 style="font-size:1.4rem;margin:0 0 12px">Mis devoluciones</h2><div class="hist" id="hReturns"></div></div>
+        <div><h2 style="font-size:1.4rem;margin:0 0 12px">Mis encargos a medida</h2><div class="hist" id="hReqs"></div></div>
+      </div>
     </div>
   </section>
 </main>
@@ -80,7 +85,7 @@
 (async () => {
   await HK.whenSupa();
   const $ = id => document.getElementById(id);
-  const show = id => ["acLoading", "acOff", "acAuth", "acReset", "acMe"].forEach(k => $(k).hidden = k !== id);
+  const show = id => { ["acLoading", "acOff", "acAuth", "acReset", "acMe"].forEach(k => $(k).hidden = k !== id); if (id !== "acMe") $("acHist").hidden = true; };
   const note = (el, msg, ok) => { el.textContent = msg; el.className = "acc-note " + (ok ? "ok" : "err"); };
   const ES = m => {
     m = String(m || "");
@@ -161,7 +166,63 @@
     $("meMkt").checked = !!me.marketing_opt_in;
     $("meAdmin").hidden = !me.is_admin;
     show("acMe");
+    loadHistory();
   }
+
+  /* ---------- Historial ---------- */
+  const ST = {
+    pago_en_revision: ["Pago en revisión", ""], pagado: ["Pagado", "ok"], en_preparacion: ["En preparación", ""], enviado: ["Enviado", "ok"],
+    entregado: ["Entregado", "ok"], cancelado: ["Cancelado", "off"], reembolsado: ["Reembolsado", "off"],
+    solicitada: ["Solicitada", ""], aceptada: ["Aceptada", "ok"], rechazada: ["Rechazada", "off"], recibida: ["Recibida", ""], reembolsada: ["Reembolsada", "ok"],
+    recibido: ["Recibido", ""], en_diseno: ["En diseño", ""], propuesta_enviada: ["Propuesta enviada", "ok"], aceptado: ["Aceptado", "ok"], en_produccion: ["En producción", ""]
+  };
+  const chip = st => `<span class="st ${(ST[st] || ["", ""])[1]}">${HK.esc((ST[st] || [st])[0])}</span>`;
+  const fecha = d => d ? new Date(d).toLocaleDateString("es-ES", {day: "numeric", month: "short", year: "numeric"}) : "";
+  const num = n => "HK-" + String(n).padStart(4, "0");
+  const track = o => {
+    if (!o.tracking) return "";
+    const t = HK.esc(o.tracking);
+    const url = /correos/i.test(o.carrier) ? "https://www.correos.es/es/es/herramientas/localizador/envios/detalle?tracking-number=" + encodeURIComponent(o.tracking) : "";
+    return `<p class="soft" style="margin:6px 0 0">Seguimiento${o.carrier ? " (" + HK.esc(o.carrier) + ")" : ""}: ${url ? `<a href="${url}" target="_blank" rel="noopener">${t}</a>` : `<b>${t}</b>`}</p>`;
+  };
+  async function loadHistory() {
+    const [o, r, q] = await Promise.all([
+      db.from("orders").select("*").order("created_at", {ascending: false}),
+      db.from("returns").select("*").order("created_at", {ascending: false}),
+      db.from("custom_requests").select("*").order("created_at", {ascending: false})
+    ]);
+    const orders = o.data || [], rets = r.data || [], reqs = q.data || [];
+    const open = id => rets.some(x => x.order_id === id && ["solicitada", "aceptada", "recibida"].includes(x.status));
+    const canReturn = x => ["enviado", "entregado"].includes(x.status) && !open(x.id) && (!x.delivered_at || Date.now() - new Date(x.delivered_at) < 14 * 864e5);
+    $("hOrders").innerHTML = orders.map(x => `<div class="hcard">
+        <div class="hrow"><b>${num(x.number)}</b>${chip(x.status)}<span class="soft">${fecha(x.created_at)}</span><b class="num" style="margin-left:auto">${euro(Number(x.total))}</b></div>
+        <ul class="hitems">${(x.items || []).map(i => `<li>${i.qty} × ${HK.esc(i.name)}</li>`).join("")}</ul>
+        ${x.coupon ? `<p class="soft" style="margin:4px 0 0">Cupón ${HK.esc(x.coupon)}: −${euro(Number(x.discount))}</p>` : ""}
+        ${track(x)}
+        ${canReturn(x) ? `<button class="linkbtn" type="button" data-ret="${x.id}" style="margin-top:8px">Solicitar devolución</button>
+          <div class="retform" id="rf-${x.id}" hidden><textarea placeholder="Cuéntanos qué ha pasado (mínimo 5 letras)" maxlength="1000"></textarea><button class="btn small" type="button" data-retgo="${x.id}">Enviar solicitud</button><div class="acc-note"></div></div>` : ""}
+      </div>`).join("") || '<p class="soft">Todavía no has hecho ningún pedido. Si compraste sin cuenta con este mismo correo, aparecerá aquí.</p>';
+    $("hRetWrap").hidden = !rets.length;
+    $("hReturns").innerHTML = rets.map(x => { const ord = orders.find(z => z.id === x.order_id);
+      return `<div class="hcard"><div class="hrow"><b>Devolución${ord ? " de " + num(ord.number) : ""}</b>${chip(x.status)}<span class="soft">${fecha(x.created_at)}</span></div>
+        <p class="soft" style="margin:6px 0 0">${HK.esc(x.reason)}</p>${x.admin_note ? `<p style="margin:6px 0 0"><b>Respuesta:</b> ${HK.esc(x.admin_note)}</p>` : ""}</div>`; }).join("");
+    $("hReqs").innerHTML = reqs.map(x => `<div class="hcard">
+        <div class="hrow"><b>Encargo nº ${x.number}</b>${chip(x.status)}<span class="soft">${fecha(x.created_at)}</span>${x.quote ? `<b class="num" style="margin-left:auto">${euro(Number(x.quote))}</b>` : ""}</div>
+        ${x.summary ? `<p style="margin:6px 0 0">${HK.esc(x.summary)}</p>` : ""}<p class="soft" style="margin:4px 0 0;white-space:pre-line">${HK.esc(x.details)}</p>
+        ${x.admin_note ? `<p style="margin:6px 0 0"><b>Mensaje de Hokane:</b> ${HK.esc(x.admin_note)}</p>` : ""}</div>`).join("") || '<p class="soft">No tienes encargos. Puedes pedir uno en <a href="encargos.html">Encargos</a> o una mini a medida en <a href="rol.html#a-medida">Minis</a>.</p>';
+    $("acHist").hidden = false;
+  }
+  $("acHist").addEventListener("click", async e => {
+    const b = e.target.closest("[data-ret]"), g = e.target.closest("[data-retgo]");
+    if (b) { const f = $("rf-" + b.dataset.ret); f.hidden = !f.hidden; return; }
+    if (g) {
+      const f = $("rf-" + g.dataset.retgo), reason = f.querySelector("textarea").value.trim(), nt = f.querySelector(".acc-note");
+      if (reason.length < 5) return note(nt, "Cuéntanos un poco más (mínimo 5 letras).");
+      const {error} = await db.rpc("request_return", {p_order: g.dataset.retgo, p_reason: reason});
+      if (error) return note(nt, error.message);
+      loadHistory();
+    }
+  });
 
   $("meSave").onclick = async () => {
     const {data: {session}} = await db.auth.getSession(); if (!session) return paint();
