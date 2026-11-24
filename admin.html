@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administración · Hokane</title>
+<meta name="description" content="Tu cuenta de Hokane: descuentos y novedades.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="canonical" href="https://hokanemarket.github.io/admin.html">
+<meta name="theme-color" content="#16171a">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hokane">
+<meta property="og:title" content="Administración · Hokane">
+<meta property="og:description" content="Tu cuenta de Hokane: descuentos y novedades.">
+<meta property="og:url" content="https://hokanemarket.github.io/admin.html">
+<meta property="og:image" content="https://hokanemarket.github.io/assets/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css?v=6">
+</head>
+<body data-page="admin">
+<header id="site-header"></header>
+<main>
+  <div class="page-head"><div class="wrap"><h1>Administración</h1><p>Productos, tienda, cupones y clientes. Lo que cambies aquí se ve en la web al recargar.</p></div></div>
+  <section style="padding-top:32px">
+    <div class="wrap">
+      <p class="soft" id="adLoading">Comprobando acceso…</p>
+      <div class="acc-card narrow" id="adNo" hidden><p style="margin:0" id="adNoMsg"></p><a class="btn" href="cuenta.html" style="justify-self:start">Ir a mi cuenta</a></div>
+
+      <div id="adApp" hidden>
+        <div class="acc-tabs" role="tablist">
+          <button type="button" data-tab="prod" aria-selected="true">Productos</button>
+          <button type="button" data-tab="shop" aria-selected="false">Tienda</button>
+          <button type="button" data-tab="cup" aria-selected="false">Cupones</button>
+          <button type="button" data-tab="cli" aria-selected="false">Clientes</button>
+        </div>
+
+        <!-- PRODUCTOS -->
+        <div data-pane="prod" style="display:grid;gap:16px;margin-top:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+            <p class="soft" style="margin:0">Los marcados <span class="pill-mini">fijo</span> ya están dibujados en la web: de esos solo cambias nombre, precio y si se ven.</p>
+            <button class="btn small" type="button" id="pNew">+ Nuevo producto</button>
+          </div>
+          <div class="adm-list" id="pList"></div>
+
+          <form class="acc-card" id="pForm" hidden novalidate>
+            <h2 style="font-size:1.4rem;margin:0" id="pTitle">Nuevo producto</h2>
+            <div class="adm-two">
+              <label>Nombre<input type="text" id="fName" maxlength="120" required></label>
+              <label>Precio (€)<input type="number" id="fPrice" min="0" step="0.01" required></label>
+            </div>
+            <div class="adm-two">
+              <label>Sección
+                <select id="fSection"><option value="rol">Minis de rol</option><option value="colecciones">Colecciones</option></select>
+              </label>
+              <label>Orden (menor = sale antes)<input type="number" id="fSort" step="1" value="100"></label>
+            </div>
+            <div id="fRich" style="display:grid;gap:14px">
+              <label>Descripción<textarea id="fDesc" maxlength="600"></textarea></label>
+              <div class="adm-two">
+                <label>Foto (JPG, PNG o WEBP)<input type="file" id="fImg" accept="image/jpeg,image/png,image/webp"><img id="fImgPrev" class="adm-prev" alt="" hidden></label>
+                <label>Modelo 3D (GLB, opcional)<input type="file" id="fGlb" accept=".glb,model/gltf-binary"><small class="soft" id="fGlbNow"></small></label>
+              </div>
+            </div>
+            <label class="check"><input type="checkbox" id="fActive" checked> <span>Visible en la web</span></label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn" type="submit" id="fSave">Guardar</button>
+              <button class="btn line" type="button" id="fCancel">Cancelar</button>
+              <button class="btn line" type="button" id="fDel" hidden>Borrar producto</button>
+            </div>
+            <div class="acc-note" id="fNote" role="status"></div>
+          </form>
+        </div>
+
+        <!-- TIENDA -->
+        <div data-pane="shop" hidden style="margin-top:18px">
+          <div class="acc-card narrow">
+            <label class="check" style="font-size:1.1rem"><input type="checkbox" id="sOpen"> <span><b>Tienda abierta</b><br><small class="soft">Si está apagado, los botones de compra salen como "Próximamente" y no se puede pagar.</small></span></label>
+            <div class="acc-note" id="sNote" role="status"></div>
+          </div>
+        </div>
+
+        <!-- CUPONES -->
+        <div data-pane="cup" hidden style="display:grid;gap:16px;margin-top:18px">
+          <form class="acc-card" id="cForm" novalidate>
+            <h2 style="font-size:1.3rem;margin:0">Nuevo cupón</h2>
+            <div class="adm-two">
+              <label>Código<input type="text" id="cCode" maxlength="30" placeholder="BIENVENIDA10" style="text-transform:uppercase" required></label>
+              <label>Descuento (%)<input type="number" id="cPct" min="1" max="90" value="10" required></label>
+            </div>
+            <div class="adm-two">
+              <label>Caduca (opcional)<input type="date" id="cExp"></label>
+              <label>Nota interna<input type="text" id="cNoteIn" maxlength="120" placeholder="Para la lista de correo de diciembre"></label>
+            </div>
+            <button class="btn" type="submit" style="justify-self:start">Crear cupón</button>
+            <div class="acc-note" id="cNote" role="status"></div>
+          </form>
+          <div class="adm-list" id="cList"></div>
+        </div>
+
+        <!-- CLIENTES -->
+        <div data-pane="cli" hidden style="display:grid;gap:16px;margin-top:18px">
+          <div class="acc-card">
+            <p style="margin:0"><b id="kTotal">0</b> cuentas · <b id="kMkt">0</b> aceptan recibir ofertas</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn small" type="button" id="kCopy">Copiar correos de quien acepta ofertas</button>
+              <button class="btn line small" type="button" id="kCsv">Descargar lista (CSV)</button>
+            </div>
+            <p class="notice" style="margin:0">Para mandar una oferta, pega los correos en el campo <b>CCO</b> de Gmail, no en "Para". Si no, cada cliente ve el correo de todos los demás, y eso es una filtración de datos.</p>
+            <div class="acc-note" id="kNote" role="status"></div>
+          </div>
+          <div style="overflow-x:auto"><table class="adm-table" id="kTable"><thead><tr><th>Correo</th><th>Nombre</th><th>Ofertas</th><th>Alta</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/app.js?v=9"></script>
+<script>
+(async () => {
+  await HK.whenSupa();
+  const $ = id => document.getElementById(id), esc = HK.esc;
+  const note = (el, msg, ok) => { el.textContent = msg; el.className = "acc-note " + (ok ? "ok" : "err"); };
+  const no = msg => { $("adLoading").hidden = true; $("adNoMsg").textContent = msg; $("adNo").hidden = false; };
+  if (!HK.ok) return no("La base de datos todavía no está configurada en assets/supa.js.");
+  let db; try { db = await HK.client(); } catch (e) { return no(e.message); }
+  const {data: {session}} = await db.auth.getSession();
+  if (!session) return no("Tienes que entrar con tu cuenta de administrador.");
+  const {data: me} = await db.from("profiles").select("is_admin").eq("id", session.user.id).maybeSingle();
+  if (!me || !me.is_admin) return no("Esta cuenta no tiene permisos de administrador.");
+  $("adLoading").hidden = true; $("adApp").hidden = false;
+
+  /* Pestañas */
+  document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
+    document.querySelectorAll("[data-tab]").forEach(x => x.setAttribute("aria-selected", x === b));
+    document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== b.dataset.tab);
+    ({prod: loadProducts, shop: loadShop, cup: loadCoupons, cli: loadClients})[b.dataset.tab]();
+  });
+
+  /* ---------- Productos ---------- */
+  let products = [], editing = null;
+  const slug = t => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "producto";
+  async function loadProducts() {
+    const {data, error} = await db.from("products").select("*").order("section").order("sort").order("name");
+    if (error) { $("pList").innerHTML = `<p class="acc-note err">${esc(error.message)}</p>`; return; }
+    products = data;
+    $("pList").innerHTML = data.map(p => `<div class="adm-row${p.active ? "" : " off"}">
+      <div class="th">${p.image_url ? `<img src="${esc(p.image_url)}" alt="">` : (p.section === "colecciones" ? "01" : "R")}</div>
+      <div><b>${esc(p.name)}</b>${p.builtin ? '<span class="pill-mini">fijo</span>' : ""}${p.active ? "" : '<span class="pill-mini">oculto</span>'}${p.model_url ? '<span class="pill-mini">3D</span>' : ""}
+        <small>${p.section === "colecciones" ? "Colecciones" : "Minis de rol"} · ${esc(p.id)}</small></div>
+      <b class="num">${euro(Number(p.price))}</b>
+      <div class="acts"><button class="btn line small" type="button" data-edit="${esc(p.id)}">Editar</button></div>
+    </div>`).join("") || '<p class="soft">Todavía no hay productos.</p>';
+  }
+  $("pList").onclick = e => { const b = e.target.closest("[data-edit]"); if (b) openForm(products.find(p => p.id === b.dataset.edit)); };
+  $("pNew").onclick = () => openForm(null);
+  $("fCancel").onclick = () => { $("pForm").hidden = true; };
+
+  function openForm(p) {
+    editing = p;
+    $("pTitle").textContent = p ? "Editar: " + p.name : "Nuevo producto";
+    $("fName").value = p ? p.name : ""; $("fPrice").value = p ? p.price : "";
+    $("fSection").value = p ? p.section : "rol"; $("fSort").value = p ? p.sort : 100;
+    $("fDesc").value = p ? p.description : ""; $("fActive").checked = p ? p.active : true;
+    $("fImg").value = ""; $("fGlb").value = "";
+    $("fImgPrev").hidden = !(p && p.image_url); if (p && p.image_url) $("fImgPrev").src = p.image_url;
+    $("fGlbNow").textContent = p && p.model_url ? "Ya tiene modelo 3D. Sube otro para cambiarlo." : "";
+    const fixed = !!(p && p.builtin);
+    $("fRich").hidden = fixed; $("fSection").disabled = fixed;
+    $("fDel").hidden = !p || fixed;
+    $("fNote").textContent = "";
+    $("pForm").hidden = false; $("pForm").scrollIntoView({behavior: "smooth", block: "start"});
+  }
+  $("fImg").onchange = () => { const f = $("fImg").files[0]; if (f) { $("fImgPrev").src = URL.createObjectURL(f); $("fImgPrev").hidden = false; } };
+
+  async function upload(file, folder, id) {
+    if (file.size > 45 * 1024 * 1024) throw new Error(`"${file.name}" pesa más de 45 MB. Redúcelo antes de subirlo.`);
+    const ext = (file.name.split(".").pop() || "bin").toLowerCase();
+    const path = `${folder}/${id}-${Date.now()}.${ext}`;
+    const {error} = await db.storage.from("productos").upload(path, file, {upsert: true, contentType: file.type || (ext === "glb" ? "model/gltf-binary" : undefined), cacheControl: "31536000"});
+    if (error) throw error;
+    return db.storage.from("productos").getPublicUrl(path).data.publicUrl;
+  }
+
+  $("pForm").onsubmit = async e => {
+    e.preventDefault();
+    const name = $("fName").value.trim(), price = Number($("fPrice").value);
+    if (!name) return note($("fNote"), "Ponle un nombre.");
+    if (!(price >= 0) || $("fPrice").value === "") return note($("fNote"), "Pon un precio válido.");
+    $("fSave").disabled = true; note($("fNote"), "Guardando…", true);
+    try {
+      let id = editing ? editing.id : slug(name);
+      if (!editing && products.some(p => p.id === id)) id = id + "-" + Date.now().toString(36).slice(-4);
+      const row = {name, price, sort: parseInt($("fSort").value || "100", 10), active: $("fActive").checked};
+      if (!editing || !editing.builtin) {
+        row.section = $("fSection").value; row.description = $("fDesc").value.trim();
+        if ($("fImg").files[0]) { note($("fNote"), "Subiendo la foto…", true); row.image_url = await upload($("fImg").files[0], "img", id); }
+        if ($("fGlb").files[0]) { note($("fNote"), "Subiendo el modelo 3D…", true); row.model_url = await upload($("fGlb").files[0], "3d", id); }
+      }
+      const q = editing ? db.from("products").update(row).eq("id", id) : db.from("products").insert({id, ...row});
+      const {error} = await q; if (error) throw error;
+      note($("fNote"), "Guardado. Ya está en la web.", true);
+      await loadProducts(); HK.refresh().catch(() => {});
+      setTimeout(() => { $("pForm").hidden = true; }, 900);
+    } catch (err) { note($("fNote"), err.message || String(err)); }
+    finally { $("fSave").disabled = false; }
+  };
+
+  let delArmed = false;
+  $("fDel").onclick = async () => {
+    if (!editing) return;
+    if (!delArmed) { delArmed = true; $("fDel").textContent = "Pulsa otra vez para borrarlo"; setTimeout(() => { delArmed = false; $("fDel").textContent = "Borrar producto"; }, 4000); return; }
+    const {error} = await db.from("products").delete().eq("id", editing.id);
+    if (error) return note($("fNote"), error.message);
+    $("pForm").hidden = true; delArmed = false; $("fDel").textContent = "Borrar producto";
+    await loadProducts(); HK.refresh().catch(() => {});
+  };
+
+  /* ---------- Tienda ---------- */
+  async function loadShop() {
+    const {data} = await db.from("settings").select("value").eq("key", "sales_open").maybeSingle();
+    $("sOpen").checked = !!(data && data.value === true);
+  }
+  $("sOpen").onchange = async () => {
+    const v = $("sOpen").checked;
+    const {error} = await db.from("settings").upsert({key: "sales_open", value: v});
+    note($("sNote"), error ? error.message : (v ? "Tienda abierta: ya se puede comprar." : "Tienda cerrada: los botones salen como Próximamente."), !error);
+    if (error) $("sOpen").checked = !v; else HK.refresh().catch(() => {});
+  };
+
+  /* ---------- Cupones ---------- */
+  async function loadCoupons() {
+    const {data, error} = await db.from("coupons").select("*").order("created_at", {ascending: false});
+    if (error) { $("cList").innerHTML = `<p class="acc-note err">${esc(error.message)}</p>`; return; }
+    const now = Date.now();
+    $("cList").innerHTML = data.map(c => { const dead = c.expires_at && new Date(c.expires_at).getTime() < now;
+      return `<div class="adm-row${c.active && !dead ? "" : " off"}" style="grid-template-columns:1fr auto auto">
+        <div><b>${esc(c.code)}</b> · ${c.percent} %${dead ? '<span class="pill-mini">caducado</span>' : ""}${c.active ? "" : '<span class="pill-mini">pausado</span>'}
+          <small>${c.expires_at ? "Caduca el " + new Date(c.expires_at).toLocaleDateString("es-ES") : "Sin caducidad"}${c.note ? " · " + esc(c.note) : ""}</small></div>
+        <button class="btn line small" type="button" data-ctoggle="${esc(c.code)}" data-on="${c.active}">${c.active ? "Pausar" : "Activar"}</button>
+        <button class="btn line small" type="button" data-cdel="${esc(c.code)}">Borrar</button>
+      </div>`; }).join("") || '<p class="soft">Todavía no hay cupones.</p>';
+  }
+  $("cForm").onsubmit = async e => {
+    e.preventDefault();
+    const code = $("cCode").value.trim().toUpperCase().replace(/\s+/g, ""), percent = parseInt($("cPct").value, 10);
+    if (!/^[A-Z0-9-]{3,30}$/.test(code)) return note($("cNote"), "El código: de 3 a 30 letras, números o guiones, sin espacios.");
+    if (!(percent >= 1 && percent <= 90)) return note($("cNote"), "El descuento tiene que estar entre 1 y 90 %.");
+    const exp = $("cExp").value ? new Date($("cExp").value + "T23:59:59").toISOString() : null;
+    const {error} = await db.from("coupons").insert({code, percent, expires_at: exp, note: $("cNoteIn").value.trim()});
+    if (error) return note($("cNote"), /duplicate/i.test(error.message) ? "Ya existe un cupón con ese código." : error.message);
+    note($("cNote"), `Cupón ${code} creado.`, true); $("cForm").reset(); $("cPct").value = 10; loadCoupons();
+  };
+  $("cList").onclick = async e => {
+    const t = e.target.closest("[data-ctoggle]"), d = e.target.closest("[data-cdel]");
+    if (t) { await db.from("coupons").update({active: t.dataset.on !== "true"}).eq("code", t.dataset.ctoggle); loadCoupons(); }
+    if (d) { if (d.dataset.armed) { await db.from("coupons").delete().eq("code", d.dataset.cdel); loadCoupons(); } else { d.dataset.armed = 1; d.textContent = "¿Seguro?"; } }
+  };
+
+  /* ---------- Clientes ---------- */
+  let clients = [];
+  async function loadClients() {
+    const {data, error} = await db.from("profiles").select("email,full_name,marketing_opt_in,marketing_opt_in_at,created_at").order("created_at", {ascending: false});
+    if (error) return note($("kNote"), error.message);
+    clients = data;
+    $("kTotal").textContent = data.length; $("kMkt").textContent = data.filter(c => c.marketing_opt_in).length;
+    $("kTable").querySelector("tbody").innerHTML = data.map(c => `<tr><td>${esc(c.email)}</td><td>${esc(c.full_name)}</td><td>${c.marketing_opt_in ? "Sí" : "No"}</td><td>${new Date(c.created_at).toLocaleDateString("es-ES")}</td></tr>`).join("");
+  }
+  $("kCopy").onclick = async () => {
+    const list = clients.filter(c => c.marketing_opt_in && c.email).map(c => c.email).join(", ");
+    if (!list) return note($("kNote"), "Todavía nadie ha aceptado recibir ofertas.");
+    try { await navigator.clipboard.writeText(list); note($("kNote"), "Copiados. Pégalos en CCO.", true); }
+    catch (e) { note($("kNote"), "No se pudo copiar automáticamente: " + list); }
+  };
+  $("kCsv").onclick = () => {
+    const rows = [["correo", "nombre", "acepta_ofertas", "fecha_consentimiento", "alta"]].concat(clients.map(c => [c.email, c.full_name, c.marketing_opt_in ? "si" : "no", c.marketing_opt_in_at || "", c.created_at]));
+    const csv = "﻿" + rows.map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = "clientes-hokane.csv"; a.click();
+  };
+
+  loadProducts();
+})();
+</script>
+</body>
+</html>

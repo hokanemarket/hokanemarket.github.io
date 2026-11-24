@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi cuenta · Hokane</title>
+<meta name="description" content="Tu cuenta de Hokane: descuentos y novedades.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="canonical" href="https://hokanemarket.github.io/cuenta.html">
+<meta name="theme-color" content="#16171a">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hokane">
+<meta property="og:title" content="Mi cuenta · Hokane">
+<meta property="og:description" content="Tu cuenta de Hokane: descuentos y novedades.">
+<meta property="og:url" content="https://hokanemarket.github.io/cuenta.html">
+<meta property="og:image" content="https://hokanemarket.github.io/assets/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css?v=6">
+</head>
+<body data-page="cuenta">
+<header id="site-header"></header>
+<main>
+  <div class="page-head"><div class="wrap"><h1>Mi cuenta</h1><p>Recibe los descuentos antes que nadie y guarda tus datos para pedir más rápido.</p></div></div>
+  <section style="padding-top:40px">
+    <div class="wrap narrow">
+      <p class="soft" id="acLoading">Cargando…</p>
+      <p class="notice" id="acOff" hidden>Las cuentas se activan muy pronto. Mientras tanto puedes comprar sin cuenta.</p>
+
+      <form class="acc-card" id="acAuth" hidden novalidate>
+        <div class="acc-tabs" role="tablist">
+          <button type="button" role="tab" data-mode="in" aria-selected="true">Entrar</button>
+          <button type="button" role="tab" data-mode="up" aria-selected="false">Crear cuenta</button>
+        </div>
+        <label id="lName" hidden>Nombre<input type="text" id="aName" autocomplete="name" maxlength="80"></label>
+        <label>Correo<input type="email" id="aEmail" autocomplete="email" required></label>
+        <label>Contraseña<input type="password" id="aPass" autocomplete="current-password" minlength="8" required></label>
+        <label class="check" id="lMkt" hidden><input type="checkbox" id="aMkt"> <span>Quiero recibir descuentos y novedades de Hokane por correo. Me puedo dar de baja cuando quiera.</span></label>
+        <p class="soft" id="lLegal" hidden style="font-size:.88rem;margin:0">Al crear la cuenta aceptas la <a href="privacidad.html">política de privacidad</a>.</p>
+        <button class="btn" type="submit" id="aGo">Entrar</button>
+        <button class="linkbtn" type="button" id="aForgot">He olvidado mi contraseña</button>
+        <div class="acc-note" id="aNote" role="status"></div>
+      </form>
+
+      <form class="acc-card" id="acReset" hidden novalidate>
+        <h2 style="font-size:1.4rem;margin:0">Nueva contraseña</h2>
+        <label>Contraseña nueva<input type="password" id="rPass" autocomplete="new-password" minlength="8" required></label>
+        <button class="btn" type="submit">Guardar contraseña</button>
+        <div class="acc-note" id="rNote" role="status"></div>
+      </form>
+
+      <div class="acc-card" id="acMe" hidden>
+        <p style="margin:0">Has entrado como <b id="meEmail"></b></p>
+        <label>Nombre<input type="text" id="meName" maxlength="80" autocomplete="name"></label>
+        <label class="check"><input type="checkbox" id="meMkt"> <span>Recibir descuentos y novedades por correo</span></label>
+        <div class="row-btns" style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" type="button" id="meSave">Guardar</button>
+          <a class="btn line" id="meAdmin" href="admin.html" hidden>Panel de administración</a>
+          <button class="btn line" type="button" id="meOut">Cerrar sesión</button>
+        </div>
+        <div class="acc-note" id="meNote" role="status"></div>
+        <details style="margin-top:6px">
+          <summary class="soft" style="cursor:pointer">Borrar mi cuenta</summary>
+          <p class="soft" style="font-size:.92rem">Se borran tu cuenta y todos tus datos. No se puede deshacer.</p>
+          <button class="btn line small" type="button" id="meDel">Borrar mi cuenta</button>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/app.js?v=9"></script>
+<script>
+(async () => {
+  await HK.whenSupa();
+  const $ = id => document.getElementById(id);
+  const show = id => ["acLoading", "acOff", "acAuth", "acReset", "acMe"].forEach(k => $(k).hidden = k !== id);
+  const note = (el, msg, ok) => { el.textContent = msg; el.className = "acc-note " + (ok ? "ok" : "err"); };
+  const ES = m => {
+    m = String(m || "");
+    if (/Invalid login/i.test(m)) return "Correo o contraseña incorrectos.";
+    if (/already registered|already exists/i.test(m)) return "Ya hay una cuenta con ese correo. Prueba a entrar.";
+    if (/Password should be|at least/i.test(m)) return "La contraseña tiene que tener al menos 8 caracteres.";
+    if (/Email not confirmed/i.test(m)) return "Confirma tu correo con el enlace que te enviamos y vuelve a entrar.";
+    if (/rate limit|too many/i.test(m)) return "Demasiados intentos. Espera unos minutos y vuelve a probar.";
+    if (/valid email|invalid email/i.test(m)) return "Ese correo no parece válido.";
+    return "No se ha podido completar: " + m;
+  };
+  if (!HK.ok) { show("acOff"); return; }
+  let db;
+  try { db = await HK.client(); } catch (e) { show("acOff"); return; }
+
+  /* Entrar / crear cuenta */
+  let mode = "in";
+  document.querySelectorAll(".acc-tabs [data-mode]").forEach(b => b.onclick = () => {
+    mode = b.dataset.mode;
+    document.querySelectorAll(".acc-tabs [data-mode]").forEach(x => x.setAttribute("aria-selected", x === b));
+    const up = mode === "up";
+    $("lName").hidden = $("lMkt").hidden = $("lLegal").hidden = !up;
+    $("aForgot").hidden = up;
+    $("aPass").autocomplete = up ? "new-password" : "current-password";
+    $("aGo").textContent = up ? "Crear cuenta" : "Entrar";
+    $("aNote").textContent = "";
+  });
+
+  $("acAuth").onsubmit = async e => {
+    e.preventDefault();
+    const email = $("aEmail").value.trim(), password = $("aPass").value;
+    if (!email || !password) return note($("aNote"), "Escribe tu correo y tu contraseña.");
+    if (password.length < 8) return note($("aNote"), "La contraseña tiene que tener al menos 8 caracteres.");
+    $("aGo").disabled = true;
+    try {
+      if (mode === "in") {
+        const {error} = await db.auth.signInWithPassword({email, password});
+        if (error) throw error;
+      } else {
+        const mkt = $("aMkt").checked;
+        const {data, error} = await db.auth.signUp({email, password, options: {
+          data: {full_name: $("aName").value.trim(), marketing_opt_in: mkt},
+          emailRedirectTo: location.origin + location.pathname
+        }});
+        if (error) throw error;
+        if (!data.session) { note($("aNote"), "¡Casi está! Te hemos enviado un correo: abre el enlace para activar tu cuenta.", true); return; }
+      }
+    } catch (err) { note($("aNote"), ES(err.message)); }
+    finally { $("aGo").disabled = false; }
+  };
+
+  $("aForgot").onclick = async () => {
+    const email = $("aEmail").value.trim();
+    if (!email) return note($("aNote"), "Escribe tu correo arriba y vuelve a pulsar.");
+    const {error} = await db.auth.resetPasswordForEmail(email, {redirectTo: location.origin + location.pathname});
+    note($("aNote"), error ? ES(error.message) : "Si hay una cuenta con ese correo, te llegará un enlace para cambiar la contraseña.", !error);
+  };
+
+  $("acReset").onsubmit = async e => {
+    e.preventDefault();
+    const password = $("rPass").value;
+    if (password.length < 8) return note($("rNote"), "Al menos 8 caracteres.");
+    const {error} = await db.auth.updateUser({password});
+    if (error) return note($("rNote"), ES(error.message));
+    note($("rNote"), "Contraseña cambiada.", true);
+    recovering = false; history.replaceState(null, "", location.pathname);
+    setTimeout(paint, 900);
+  };
+
+  /* Mi cuenta */
+  async function paint() {
+    const {data: {session}} = await db.auth.getSession();
+    if (!session) { show("acAuth"); return; }
+    const {data: me, error} = await db.from("profiles").select("email,full_name,marketing_opt_in,is_admin").eq("id", session.user.id).maybeSingle();
+    $("meEmail").textContent = session.user.email;
+    if (error || !me) { show("acMe"); note($("meNote"), "No se ha podido cargar tu perfil. Recarga la página."); return; }
+    $("meName").value = me.full_name || "";
+    $("meMkt").checked = !!me.marketing_opt_in;
+    $("meAdmin").hidden = !me.is_admin;
+    show("acMe");
+  }
+
+  $("meSave").onclick = async () => {
+    const {data: {session}} = await db.auth.getSession(); if (!session) return paint();
+    const mkt = $("meMkt").checked;
+    const {error} = await db.from("profiles").update({full_name: $("meName").value.trim(), marketing_opt_in: mkt, marketing_opt_in_at: mkt ? new Date().toISOString() : null}).eq("id", session.user.id);
+    note($("meNote"), error ? ES(error.message) : "Guardado.", !error);
+  };
+  $("meOut").onclick = async () => { await db.auth.signOut(); location.reload(); };
+  let delArmed = false;
+  $("meDel").onclick = async () => {
+    if (!delArmed) { delArmed = true; $("meDel").textContent = "Pulsa otra vez para confirmar"; return; }
+    const {error} = await db.rpc("delete_my_account");
+    if (error) return note($("meNote"), ES(error.message));
+    await db.auth.signOut(); location.href = "index.html";
+  };
+
+  let recovering = /type=recovery/.test(location.hash);
+  db.auth.onAuthStateChange((event) => {
+    if (event === "PASSWORD_RECOVERY") recovering = true;
+    if (recovering && event !== "SIGNED_OUT") { show("acReset"); return; }
+    if (event === "SIGNED_IN" || event === "SIGNED_OUT") paint();
+  });
+  if (!recovering) paint();
+})();
+</script>
+</body>
+</html>

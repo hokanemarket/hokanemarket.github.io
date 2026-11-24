@@ -22,7 +22,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=5">
+<link rel="stylesheet" href="assets/styles.css?v=6">
 </head>
 <body data-page="carrito">
 <header id="site-header"></header>
@@ -35,6 +35,11 @@
         <aside class="summary" aria-label="Resumen del pedido">
           <h3>Resumen</h3>
           <div class="r"><span class="soft">Subtotal</span><b class="num" id="sub"></b></div>
+          <div id="couponWrap" hidden>
+            <div class="coupon-box"><input id="couponIn" placeholder="Código de descuento" aria-label="Código de descuento" maxlength="30"><button class="btn line small" type="button" id="couponGo">Aplicar</button></div>
+            <div class="acc-note" id="couponNote" role="status"></div>
+          </div>
+          <div class="r" id="discRow" hidden><span class="soft">Descuento <span id="discCode"></span> <button class="linkbtn" type="button" id="couponRm" style="font-size:.85rem">quitar</button></span><b class="num" id="disc"></b></div>
           <div class="ship" id="ship" role="radiogroup" aria-label="Entrega"></div>
           <div class="r tot"><span>Total</span><span class="num" id="total"></span></div>
           <div id="paypal-buttons"></div>
@@ -59,18 +64,21 @@
   </section>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/app.js?v=6"></script>
+<script src="assets/app.js?v=9"></script>
 <script>
 let shipId = CONFIG.shipping[0].id;
 const shipPrice = () => CONFIG.shipping.find(s => s.id === shipId).price;
-const total = () => Cart.subtotal() + shipPrice();
+let coupon = null; try { coupon = JSON.parse(localStorage.getItem("hk-coupon") || "null"); } catch (e) {}
+const discount = () => coupon ? Math.round(Cart.subtotal() * coupon.percent) / 100 : 0;
+const total = () => Math.max(0, Cart.subtotal() - discount()) + shipPrice();
+const live = () => Cart.items().filter(i => PRODUCTS[i.id]);
 
 document.getElementById("ship").innerHTML = CONFIG.shipping.map((s, i) =>
   `<label><input type="radio" name="ship" value="${s.id}" ${i === 0 ? "checked" : ""}> <span style="flex:1">${s.label}</span><b class="num">${s.price ? euro(s.price) : "Gratis"}</b></label>`).join("");
 document.getElementById("ship").addEventListener("change", e => { shipId = e.target.value; render(); });
 
 function render() {
-  const items = Cart.items().filter(i => PRODUCTS[i.id]);
+  const items = live();
   document.getElementById("cartView").hidden = !items.length;
   document.getElementById("empty").hidden = !!items.length || document.getElementById("thanks").classList.contains("show");
   document.getElementById("lines").innerHTML = items.map(i => { const p = PRODUCTS[i.id];
@@ -78,6 +86,8 @@ function render() {
       <div class="qty"><button type="button" data-q="${i.id}" data-d="-1" aria-label="Una menos">−</button><input value="${i.qty}" readonly aria-label="Cantidad"><button type="button" data-q="${i.id}" data-d="1" aria-label="Una más">+</button></div>
       <b class="num">${euro(p.price * i.qty)}</b></div>`; }).join("");
   document.getElementById("sub").textContent = euro(Cart.subtotal());
+  document.getElementById("discRow").hidden = !coupon;
+  if (coupon) { document.getElementById("disc").textContent = "−" + euro(discount()); document.getElementById("discCode").textContent = `(${coupon.code}, ${coupon.percent} %)`; }
   document.getElementById("total").textContent = euro(total());
 }
 document.getElementById("lines").addEventListener("click", e => {
@@ -86,15 +96,43 @@ document.getElementById("lines").addEventListener("click", e => {
   if (r) { Cart.set(r.dataset.rm, 0); render(); }
 });
 render();
+document.addEventListener("hk:data", render);
+
+/* Cupones: se comprueban en la base de datos */
+HK.whenSupa().then(async () => {
+  if (!HK.ok) return;
+  document.getElementById("couponWrap").hidden = false;
+  const inp = document.getElementById("couponIn"), nt = document.getElementById("couponNote");
+  const say = (m, ok) => { nt.textContent = m; nt.className = "acc-note " + (ok ? "ok" : "err"); };
+  async function apply() {
+    const code = inp.value.trim().toUpperCase();
+    if (!code) return say("Escribe el código.");
+    try {
+      const db = await HK.client();
+      const {data, error} = await db.rpc("check_coupon", {p_code: code});
+      if (error) throw error;
+      if (!data) { say("Ese código no existe o ha caducado."); return; }
+      coupon = {code, percent: data}; try { localStorage.setItem("hk-coupon", JSON.stringify(coupon)); } catch (e) {}
+      say(`Descuento del ${data} % aplicado.`, true); inp.value = ""; render();
+    } catch (e) { say("No se ha podido comprobar el código. Prueba otra vez."); }
+  }
+  document.getElementById("couponGo").onclick = apply;
+  inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); apply(); } });
+  // vuelve a comprobar el cupón guardado por si lo han pausado
+  if (coupon) { try { const db = await HK.client(); const {data} = await db.rpc("check_coupon", {p_code: coupon.code}); if (data !== coupon.percent) { coupon = data ? {code: coupon.code, percent: data} : null; try { localStorage.setItem("hk-coupon", JSON.stringify(coupon)); } catch (e) {} render(); } } catch (e) {} }
+});
+document.getElementById("couponRm").onclick = () => { coupon = null; try { localStorage.removeItem("hk-coupon"); } catch (e) {} render(); };
 
 function orderText() {
-  const lines = Cart.items().map(i => `- ${i.qty} × ${PRODUCTS[i.id].name} (${euro(PRODUCTS[i.id].price * i.qty)})`).join("\n");
+  const lines = live().map(i => `- ${i.qty} × ${PRODUCTS[i.id].name} (${euro(PRODUCTS[i.id].price * i.qty)})`).join("\n");
   const s = CONFIG.shipping.find(x => x.id === shipId);
-  return `Hola, quiero hacer este pedido:\n${lines}\nEntrega: ${s.label} (${s.price ? euro(s.price) : "gratis"})\nTotal: ${euro(total())}\n\nMi nombre:\nDirección de envío (si aplica):`;
+  return `Hola, quiero hacer este pedido:\n${lines}\nEntrega: ${s.label} (${s.price ? euro(s.price) : "gratis"})\n${coupon ? `Cupón: ${coupon.code} (−${euro(discount())})\n` : ""}Total: ${euro(total())}\n\nMi nombre:\nDirección de envío (si aplica):`;
 }
 document.getElementById("mailOrder").onclick = () => openOrder(orderText());
 
 /* PayPal: se activa solo cuando hay Client ID en CONFIG y la tienda está abierta */
+let payWasOpen = CONFIG.salesOpen;
+document.addEventListener("hk:data", () => { if (CONFIG.salesOpen !== payWasOpen) location.reload(); });
 if (!CONFIG.salesOpen) {
   const fb = document.getElementById("payFallback"); fb.hidden = false;
   fb.innerHTML = '<p class="notice">La tienda abre muy pronto. Todavía no se pueden hacer compras.</p>';
@@ -104,20 +142,21 @@ if (!CONFIG.salesOpen) {
   s.onload = () => paypal.Buttons({
     style: {shape: "pill", label: "pay", height: 46},
     createOrder: (data, actions) => {
-      const items = Cart.items();
+      const items = live(), d = discount();
       return actions.order.create({
         purchase_units: [{
           description: "Pedido Hokane",
           amount: {currency_code: CONFIG.currency, value: total().toFixed(2), breakdown: {
             item_total: {currency_code: CONFIG.currency, value: Cart.subtotal().toFixed(2)},
-            shipping: {currency_code: CONFIG.currency, value: shipPrice().toFixed(2)}}},
+            shipping: {currency_code: CONFIG.currency, value: shipPrice().toFixed(2)},
+            ...(d > 0 ? {discount: {currency_code: CONFIG.currency, value: d.toFixed(2)}} : {})}},
           items: items.map(i => ({name: PRODUCTS[i.id].name.slice(0, 120), quantity: String(i.qty), unit_amount: {currency_code: CONFIG.currency, value: PRODUCTS[i.id].price.toFixed(2)}}))
         }],
         application_context: {shipping_preference: shipId === "envio" ? "GET_FROM_FILE" : "NO_SHIPPING"}
       });
     },
     onApprove: (data, actions) => actions.order.capture().then(() => {
-      Cart.clear(); document.getElementById("cartView").hidden = true; document.getElementById("thanks").classList.add("show");
+      Cart.clear(); coupon = null; try { localStorage.removeItem("hk-coupon"); } catch (e) {} document.getElementById("cartView").hidden = true; document.getElementById("thanks").classList.add("show");
     }),
     onError: () => { document.getElementById("payFallback").hidden = false; toast("No se pudo completar el pago. Puedes enviarnos el pedido por correo."); }
   }).render("#paypal-buttons").catch(() => { document.getElementById("payFallback").hidden = false; });

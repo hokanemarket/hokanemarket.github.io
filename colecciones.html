@@ -21,7 +21,7 @@
 <meta name="description" content="Las cajas sorpresa de Hokane: figuras de resina en colecciones limitadas de seis figuras y una secreta.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=5">
+<link rel="stylesheet" href="assets/styles.css?v=6">
 </head>
 <body data-page="colecciones">
 <header id="site-header"></header>
@@ -53,8 +53,8 @@
           <h2>Los 7 pecados</h2>
           <p class="soft">Hoki, el diablillo de Hokane, cae en los siete pecados capitales. Y la secreta se hace la buena. Pulsa la caja para probar suerte.</p>
           <div class="facts">
-            <div><span>Caja sorpresa</span><b class="num">13 €</b></div>
-            <div><span>Colección completa</span><b class="num">70 €</b></div>
+            <div><span>Caja sorpresa</span><b class="num" data-price-of="c01-box">13 €</b></div>
+            <div><span>Colección completa</span><b class="num" data-price-of="c01-set">70 €</b></div>
             <div><span>Tamaño</span><b>7–9 cm</b></div>
             <div><span>Figura secreta</span><b class="num">1 de cada 12</b></div>
           </div>
@@ -66,8 +66,8 @@
             </div>
             <button class="btn" type="button" data-add="c01-box" data-qty-from="#boxQty">Reservar cajas <span class="arrow">→</span></button>
           </div>
-          <button class="btn line" type="button" data-add="c01-set" style="justify-self:start">Colección completa · 70 €</button>
-          <p class="soft" style="font-size:.85rem">La colección completa trae las siete figuras normales. Las reservas se envían en cuanto salga la colección.</p>
+          <button class="btn line" type="button" data-add="c01-set" style="justify-self:start">Colección completa · <span data-price-of="c01-set">70 €</span></button>
+          <p class="soft" style="font-size:.85rem">La colección completa trae las ocho figuras, la secreta incluida. Las reservas se envían en cuanto salga la colección.</p>
         </div>
       </div>
 
@@ -83,9 +83,15 @@
       <p class="soft" style="font-size:.85rem;margin-top:16px">Imágenes de los diseños: las fotos de las figuras impresas llegan con la colección.</p>
     </div>
   </section>
+  <section style="padding-top:24px" hidden>
+    <div class="wrap">
+      <div class="mhead"><span class="label">Novedades</span><h2>Más figuras</h2></div>
+      <div class="packs" id="dbProducts" data-section="colecciones"></div>
+    </div>
+  </section>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/app.js?v=8"></script>
+<script src="assets/app.js?v=9"></script>
 <script>
 const C = COLLECTIONS[0];
 const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
