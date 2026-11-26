@@ -63,7 +63,7 @@
   let viewers = [];
   function stopAll() { viewers.forEach(v => v.dispose()); viewers = []; }
 
-  function viewer(canvas, url, fitH) {
+  function viewer(canvas, url, fitH, zoomable) {
     const r = new THREE.WebGLRenderer({canvas, antialias: true, alpha: true});
     r.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
     if (r.outputEncoding !== undefined) r.outputEncoding = THREE.sRGBEncoding;
@@ -73,7 +73,10 @@
     const f = new THREE.DirectionalLight(0xffffff, .35); f.position.set(-60, 20, 30); s.add(f);
     const rim = new THREE.DirectionalLight(0xffffff, .4); rim.position.set(0, 40, -80); s.add(rim);
     const holder = new THREE.Group(); s.add(holder);
-    let alive = true, visible = true, drag = null, rot = 0, vel = 0;
+    let alive = true, visible = true, drag = null, rot = 0, vel = 0, p0 = null, zf = 1;
+    const tgt = new THREE.Vector3(0, 23, 0);
+    const setZ = z => { zf = Math.min(1, Math.max(.4, z)); if (p0) { cam.position.copy(tgt).addScaledVector(p0.clone().sub(tgt), zf); cam.lookAt(tgt); } };
+    if (zoomable) canvas.addEventListener("wheel", e => { e.preventDefault(); setZ(zf * (e.deltaY > 0 ? 1.1 : .9)); }, {passive: false});
     const fit = () => { const b = canvas.getBoundingClientRect(); if (!b.width) return; r.setSize(b.width, b.height, false); cam.aspect = b.width / b.height; cam.updateProjectionMatrix(); };
     fit(); addEventListener("resize", fit);
     (function(){const L=new THREE.GLTFLoader(); if (window.MeshoptDecoder) L.setMeshoptDecoder(MeshoptDecoder); return L;})().load(url, g => {
@@ -86,7 +89,7 @@
       const diag = Math.hypot(size.x, size.z) + 2 * Math.hypot(c.x - cx, c.z - cz), vf = cam.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * cam.aspect);
       // cámara fija igual para todas: misma escala (todas tienen peana de 25 mm)
       const VIEW = 58, d = Math.max(VIEW / 2 / Math.tan(vf), 46 / 2 / Math.tan(hf));
-      cam.position.set(0, 25 + d * .16, d); cam.lookAt(0, 23, 0);
+      cam.position.set(0, 25 + d * .16, d); cam.lookAt(0, 23, 0); p0 = cam.position.clone();
       canvas.parentElement.classList.add("ready");
     }, undefined, () => canvas.parentElement.classList.add("err"));
     canvas.addEventListener("pointerdown", e => { drag = e.clientX; vel = 0; canvas.setPointerCapture(e.pointerId); });
@@ -101,28 +104,104 @@
       }
       requestAnimationFrame(loop);
     })();
-    return {dispose() { alive = false; io.disconnect(); removeEventListener("resize", fit); r.dispose(); }};
+    return {zoom(d) { setZ(zf * (d > 0 ? .8 : 1.25)); }, dispose() { alive = false; io.disconnect(); removeEventListener("resize", fit); r.dispose(); }};
   }
 
   function open(id, scroll) {
     const c = CATS.find(x => x.id === id && !x.soon); if (!c) return;
     catsEl.querySelectorAll(".mcat").forEach(b => b.setAttribute("aria-pressed", b.dataset.cat === id));
     stopAll();
-    const p = (typeof PRODUCTS !== "undefined" ? PRODUCTS : {})[c.pack];
+    const p = (typeof PRODUCTS !== "undefined" ? PRODUCTS : {})[c.pack], pk = PICK[c.id];
     gal.hidden = false;
     gal.innerHTML = `<div class="mgal-head"><div><span class="label">Categoría</span><h2>${c.name}</h2>
       <p class="soft">Gira cada mini arrastrando. Resina gris sin pintar, base de 25 mm con la marca Hokane.</p></div>
       ${p ? `<div class="mgal-buy"><span class="price num">${p.price} €</span>${(typeof CONFIG !== "undefined" && !CONFIG.salesOpen) ? `<button class="btn" type="button" disabled title="La tienda abre muy pronto">Próximamente</button>` : `<button class="btn" type="button" data-add="${c.pack}">Añadir el pack <span class="arrow">→</span></button>`}</div>` : ""}</div>
-      <div class="mgrid">${c.minis.map(([file, name, txt]) => `<figure class="mini3d"><div class="mstage">${has3D ? `<canvas aria-label="Modelo 3D de ${(window.HK && HK.esc) ? HK.esc(name) : name}"></canvas>` : ""}<span class="mload">Cargando 3D…</span></div>
-      <figcaption><b>${(window.HK && HK.esc) ? HK.esc(name) : name}</b><small>${(window.HK && HK.esc) ? HK.esc(txt) : txt}</small></figcaption></figure>`).join("")}</div>`;
+      <div class="mgrid">${c.minis.map(([file, name, txt], i) => `<figure class="mini3d" data-i="${i}"><div class="mstage">${has3D ? `<canvas aria-label="Modelo 3D de ${(window.HK && HK.esc) ? HK.esc(name) : name}"></canvas>` : ""}<span class="mload">Cargando 3D…</span></div>
+      <figcaption><b>${(window.HK && HK.esc) ? HK.esc(name) : name}</b><small>${(window.HK && HK.esc) ? HK.esc(txt) : txt}</small></figcaption>
+      <div class="mini-acts">${has3D ? `<button type="button" class="btn line small" data-big="${i}">Ver en grande</button>` : ""}${pk ? `<button type="button" class="btn line small mpick" data-pick="${i}" aria-pressed="false">Elegir</button>` : ""}</div></figure>`).join("")}</div>
+      ${pk ? `<div class="mpickbar" id="pickBar"><span id="pickTxt" class="soft">${esc(pk.hint)}</span><span class="mpb-acts"><button type="button" class="btn line small" id="pickClear" hidden>Quitar selección</button><button type="button" class="btn small" id="pickAdd" disabled>Añadir al carrito</button></span></div>` : ""}`;
+    sel = []; cur = c; paintPick();
     if (has3D) gal.querySelectorAll("canvas").forEach((cv, i) => { const m = c.minis[i];
       viewers.push(m[3] ? viewer(cv, m[0], c.id === "monstruos" ? 52 : 40) : viewer(cv, c.dir + m[0] + ".glb?v=" + (c.v || 1))); });
     if (location.hash !== "#" + id) history.replaceState(null, "", "#" + id);
     if (scroll) gal.scrollIntoView({behavior: REDUCE ? "auto" : "smooth", block: "start"});
   }
 
+  /* ---------- Elegir minis para los packs ---------- */
+  const esc = v => (window.HK && HK.esc) ? HK.esc(v) : String(v);
+  const PICK = {
+    aventureros: {pack: "rol-grupo", size: 5, single: "rol-suelta", hint: "Marca 5 héroes para el pack, o los que quieras sueltos."},
+    goblins: {single: "rol-tropa", three: "rol-tropa3", hint: "¿Te faltan tropas? Marca las que quieras sueltas."},
+    nomuertos: {single: "rol-tropa", three: "rol-tropa3", hint: "¿Te faltan tropas? Marca las que quieras sueltas."}
+  };
+  let sel = [], cur = null;
+  const P = () => (typeof PRODUCTS !== "undefined" ? PRODUCTS : {});
+  const eur = n => (typeof euro === "function") ? euro(n) : n.toFixed(2) + " €";
+  function lines() {
+    const pk = cur && PICK[cur.id]; if (!pk || !sel.length) return [];
+    const names = sel.map(i => cur.minis[i][1]), out = [], tag = n => (cur.name + ": " + n.join(", ")).slice(0, 300);
+    let rest = names;
+    if (pk.pack && P()[pk.pack]) { while (rest.length >= pk.size) { out.push({id: pk.pack, qty: 1, opt: tag(rest.slice(0, pk.size))}); rest = rest.slice(pk.size); } }
+    if (pk.three && P()[pk.three] && rest.length >= 3) { const k = Math.floor(rest.length / 3); out.push({id: pk.three, qty: k, opt: tag(rest.slice(0, 3 * k))}); rest = rest.slice(3 * k); }
+    if (rest.length && P()[pk.single]) out.push({id: pk.single, qty: rest.length, opt: tag(rest)});
+    return out;
+  }
+  function paintPick() {
+    const bar = document.getElementById("pickBar"); if (!bar) return;
+    gal.querySelectorAll(".mini3d").forEach(f => { const on = sel.includes(+f.dataset.i); f.classList.toggle("picked", on); const b = f.querySelector(".mpick"); if (b) { b.setAttribute("aria-pressed", on); b.textContent = on ? "Elegida ✓" : "Elegir"; } });
+    const L = lines(), tot = L.reduce((a, l) => a + P()[l.id].price * l.qty, 0), pk = PICK[cur.id];
+    const desc = L.map(l => l.id === pk.pack ? "pack de " + pk.size : l.id === pk.three ? l.qty + "× pack de 3" : l.qty + (l.qty === 1 ? " suelta" : " sueltas")).join(" + ");
+    document.getElementById("pickTxt").innerHTML = sel.length ? `<b>${sel.length} elegida${sel.length === 1 ? "" : "s"}</b> · ${desc} · <b class="num">${eur(tot)}</b>` : esc(pk.hint);
+    const add = document.getElementById("pickAdd"), closed = typeof CONFIG !== "undefined" && !CONFIG.salesOpen;
+    add.disabled = !L.length || closed; add.textContent = closed ? "Próximamente" : "Añadir al carrito";
+    document.getElementById("pickClear").hidden = !sel.length;
+    bar.classList.toggle("on", !!sel.length);
+  }
+  gal.addEventListener("click", e => {
+    const pb = e.target.closest("[data-pick]");
+    if (pb) { const i = +pb.dataset.pick; sel = sel.includes(i) ? sel.filter(x => x !== i) : sel.concat(i); paintPick(); return; }
+    const bb = e.target.closest("[data-big]");
+    if (bb) { big(+bb.dataset.big); return; }
+    if (e.target.closest("#pickClear")) { sel = []; paintPick(); return; }
+    if (e.target.closest("#pickAdd")) {
+      if (typeof CONFIG !== "undefined" && !CONFIG.salesOpen) return;
+      lines().forEach(l => Cart.add(l.id, l.qty, l.opt));
+      sel = []; paintPick();
+    }
+  });
+  gal.addEventListener("dblclick", e => { const f = e.target.closest(".mini3d"); if (f && has3D) big(+f.dataset.i); });
+  // Desde un botón de pack que necesita elegir (p. ej. el de la lista de packs)
+  if (window.HK) HK.pickFor = id => {
+    const cat = (HK.PICK_CAT || {})[id] || "aventureros";
+    if (!cur || !PICK[cur.id] || (cur.id !== cat && !(cat === "goblins" && cur.id === "nomuertos"))) open(cat, true); else gal.scrollIntoView({behavior: REDUCE ? "auto" : "smooth", block: "start"});
+    if (typeof toast === "function") toast(id === "rol-grupo" ? "Marca 5 héroes en el catálogo y pulsa «Añadir al carrito»" : id === "rol-suelta" ? "Marca los héroes que quieras en el catálogo" : "Marca las tropas que quieras (goblins o esqueletos)");
+  };
+
+  /* ---------- Ver una mini en grande ---------- */
+  let bigV = null;
+  function big(i) {
+    if (!cur || !has3D) return; const m = cur.minis[i]; if (!m) return;
+    let d = document.getElementById("miniBig");
+    if (!d) {
+      d = document.createElement("dialog"); d.id = "miniBig"; d.className = "dlg3d";
+      d.innerHTML = `<div class="dlg3d-top"><b id="mbName"></b><span class="mbz"><button class="btn line small" type="button" data-z="-1" aria-label="Alejar">−</button><button class="btn line small" type="button" data-z="1" aria-label="Acercar">+</button><button class="btn line small" type="button" id="mbClose">Cerrar</button></span></div>
+        <div id="mbStage"></div><p class="soft" id="mbTxt" style="margin:10px 0 0"></p>`;
+      document.body.appendChild(d);
+      d.querySelector("#mbClose").onclick = () => d.close();
+      d.addEventListener("click", e => { const z = e.target.closest("[data-z]"); if (z && bigV) bigV.zoom(+z.dataset.z); if (e.target === d) d.close(); });
+      d.addEventListener("close", () => { if (bigV) bigV.dispose(); bigV = null; d.querySelector("#mbStage").innerHTML = ""; });
+    }
+    d.querySelector("#mbName").textContent = m[1];
+    d.querySelector("#mbTxt").textContent = (m[2] || "") + " Arrastra para girar; rueda o +/− para acercar.";
+    d.querySelector("#mbStage").innerHTML = `<div class="mstage mbig"><canvas aria-label="Modelo 3D de ${esc(m[1])} en grande"></canvas><span class="mload">Cargando 3D…</span></div>`;
+    d.showModal();
+    const cv = d.querySelector("#mbStage canvas");
+    bigV = m[3] ? viewer(cv, m[0], cur.id === "monstruos" ? 52 : 40, true) : viewer(cv, cur.dir + m[0] + ".glb?v=" + (cur.v || 1), undefined, true);
+  }
+
   catsEl.addEventListener("click", e => { const b = e.target.closest(".mcat"); if (b && !b.disabled) open(b.dataset.cat, true); });
   open((location.hash || "").slice(1) || "goblins", !!location.hash);
+  addEventListener("hashchange", () => { const h = (location.hash || "").slice(1); if (h && (!cur || cur.id !== h) && CATS.some(c => c.id === h && !c.soon)) open(h, true); });
   // si llegan minis nuevas de la base, repintar
   document.addEventListener("hk:data", () => {
     const before = JSON.stringify(CATS.map(c => c.minis.length)); mergeDb();

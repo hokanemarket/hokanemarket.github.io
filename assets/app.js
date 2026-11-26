@@ -47,6 +47,7 @@ const PRODUCTS = {
 
 /* ---------- Datos de la base (Supabase), con copia guardada en el navegador ---------- */
 const HK = window.HK = window.HK || {};
+HK.esc = HK.esc || (v => String(v ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c])));
 HK.apply = function (d) {
   if (!d || !Array.isArray(d.products)) return;
   d.products.forEach(p => {
@@ -146,16 +147,20 @@ const PAGES = [
   });
 })();
 
+/* Packs con minis a elegir: en qué categoría del catálogo se eligen */
+HK.PICK_CAT = {"rol-grupo": "aventureros", "rol-suelta": "aventureros", "rol-tropa": "goblins", "rol-tropa3": "goblins"};
 /* ---------- Carrito (se guarda en el navegador) ---------- */
 const Cart = (function () {
   let mem = [];
   const read = () => { try { return JSON.parse(localStorage.getItem("hk-cart") || "[]"); } catch (e) { return mem; } };
   const write = items => { mem = items; try { localStorage.setItem("hk-cart", JSON.stringify(items)); } catch (e) {} paintCount(); };
   function paintCount() { const n = read().reduce((a, i) => a + i.qty, 0); const el = document.getElementById("cartCount"); if (el) el.textContent = n ? n : ""; }
+  // Cada línea: {id, qty, opt?}. "opt" = minis elegidas; misma id con otra elección = otra línea.
+  const key = i => i.id + (i.opt ? "|" + i.opt : "");
   return {
-    items: read,
-    add(id, qty = 1) { const it = read(); const f = it.find(i => i.id === id); f ? f.qty += qty : it.push({id, qty}); write(it); toast(`${PRODUCTS[id].name} añadido`, true); },
-    set(id, qty) { let it = read(); it = qty > 0 ? it.map(i => i.id === id ? {...i, qty} : i) : it.filter(i => i.id !== id); write(it); },
+    items: read, key,
+    add(id, qty = 1, opt = "") { opt = String(opt || "").slice(0, 300); const it = read(); const f = it.find(i => key(i) === key({id, opt})); f ? f.qty += qty : it.push(opt ? {id, qty, opt} : {id, qty}); write(it); toast(`${PRODUCTS[id].name} añadido`, true); },
+    set(k, qty) { let it = read(); it = qty > 0 ? it.map(i => key(i) === k ? {...i, qty} : i) : it.filter(i => key(i) !== k); write(it); },
     clear() { write([]); },
     subtotal() { return read().reduce((a, i) => a + (PRODUCTS[i.id]?.price || 0) * i.qty, 0); },
     paintCount
@@ -166,8 +171,14 @@ document.addEventListener("click", e => {
   const b = e.target.closest("[data-add]"); if (!b) return;
   if (!CONFIG.salesOpen) { toast("La tienda abre muy pronto"); return; }
   if (!PRODUCTS[b.dataset.add]) { toast("Este producto ya no está disponible"); return; }
+  // Packs en los que el cliente elige las minis: se eligen marcándolas en el catálogo
+  const cat = HK.PICK_CAT[b.dataset.add];
+  if (cat && !b.dataset.opt) {
+    if (HK.pickFor) HK.pickFor(b.dataset.add); else location.href = "rol.html#" + cat;
+    return;
+  }
   const q = b.dataset.qtyFrom ? Math.max(1, parseInt(document.querySelector(b.dataset.qtyFrom).value || "1", 10)) : 1;
-  Cart.add(b.dataset.add, q);
+  Cart.add(b.dataset.add, q, b.dataset.opt || "");
 });
 
 function toast(msg, withLink) {

@@ -364,3 +364,14 @@ dialog.dlg3d::backdrop{background:rgba(0,0,0,.55)}
 .enc-l{display:grid;gap:6px;font-weight:600;color:var(--bg)}
 .enc-l select{font:inherit;font-weight:500;padding:11px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--bg) 35%,transparent);background:color-mix(in srgb,var(--bg) 10%,transparent);color:var(--bg)}
 .enc-l select option{color:#16171a}
+/* Elegir minis y verlas en grande */
+.mini-acts{display:flex;gap:6px;flex-wrap:wrap;padding:0 2px 2px}
+.mini-acts .btn{padding:8px 12px;font-size:.82rem;flex:1}
+.mini3d.picked{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.mpick[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.mpickbar{position:sticky;bottom:14px;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px;padding:12px 16px;background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 28px rgba(0,0,0,.08)}
+.mpickbar.on{border-color:var(--accent)}
+.mpb-acts{display:flex;gap:8px}
+.mstage.mbig{aspect-ratio:auto;height:min(68vh,620px)}
+.mstage.mbig canvas{touch-action:none}
+.mbz{display:flex;gap:6px}
