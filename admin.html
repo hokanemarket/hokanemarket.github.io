@@ -22,7 +22,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=6">
+<link rel="stylesheet" href="assets/styles.css?v=8">
 </head>
 <body data-page="admin">
 <header id="site-header"></header>
@@ -169,7 +169,7 @@
   </section>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/app.js?v=10"></script>
+<script src="assets/app.js?v=11"></script>
 <script>
 (async () => {
   await HK.whenSupa();
@@ -360,7 +360,7 @@
         <div class="hrow"><b>${num(o.number)}</b><span class="st">${esc((OST.find(x => x[0] === o.status) || [, o.status])[1])}</span><span class="soft">${fecha(o.created_at)}</span>
           <span class="soft">${esc(o.name || "")} · ${esc(o.email)}${o.user_id ? "" : " (sin cuenta)"}</span><b class="num" style="margin-left:auto">${euro(Number(o.total))}</b></div>
         ${bad ? `<p class="st warn" style="display:inline-block;margin:8px 0 0">⚠ PayPal cobró ${euro(Number(o.paypal_amount))} y el pedido vale ${euro(Number(o.total))}. Revísalo antes de enviar.</p>` : ""}
-        <ul class="hitems">${(o.items || []).map(i => `<li>${i.qty} × ${esc(i.name)} (${euro(Number(i.price))})</li>`).join("")}</ul>
+        <ul class="hitems">${(o.items || []).map(i => `<li>${i.qty} × ${esc(i.name)} (${euro(Number(i.price))})${i.opt ? `<br><small class="soft">Eligió: ${esc(i.opt)}</small>` : ""}</li>`).join("")}</ul>
         <p class="soft" style="margin:6px 0 0;font-size:.9rem">Subtotal ${euro(Number(o.subtotal))}${o.coupon ? ` · cupón ${esc(o.coupon)} −${euro(Number(o.discount))}` : ""} · envío ${euro(Number(o.shipping))} · PayPal ${esc(o.paypal_order_id || "—")}</p>
         <p style="margin:6px 0 0;font-size:.95rem"><b>Enviar a:</b> ${addr(o.shipping_address)}</p>
         <div class="adm-two" style="margin-top:10px">

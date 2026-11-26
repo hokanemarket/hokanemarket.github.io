@@ -22,7 +22,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=6">
+<link rel="stylesheet" href="assets/styles.css?v=8">
 </head>
 <body data-page="carrito">
 <header id="site-header"></header>
@@ -66,7 +66,7 @@
   </section>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/app.js?v=10"></script>
+<script src="assets/app.js?v=11"></script>
 <script>
 let shipId = CONFIG.shipping[0].id;
 const shipPrice = () => CONFIG.shipping.find(s => s.id === shipId).price;
@@ -83,9 +83,9 @@ function render() {
   const items = live();
   document.getElementById("cartView").hidden = !items.length;
   document.getElementById("empty").hidden = !!items.length || document.getElementById("thanks").classList.contains("show");
-  document.getElementById("lines").innerHTML = items.map(i => { const p = PRODUCTS[i.id];
-    return `<div class="cline"><div class="thumb">${p.thumb}</div><div><b>${p.name}</b><br><button class="rm" type="button" data-rm="${i.id}">Quitar</button></div>
-      <div class="qty"><button type="button" data-q="${i.id}" data-d="-1" aria-label="Una menos">−</button><input value="${i.qty}" readonly aria-label="Cantidad"><button type="button" data-q="${i.id}" data-d="1" aria-label="Una más">+</button></div>
+  document.getElementById("lines").innerHTML = items.map(i => { const p = PRODUCTS[i.id], k = HK.esc(Cart.key(i));
+    return `<div class="cline"><div class="thumb">${p.thumb}</div><div><b>${p.name}</b>${i.opt ? `<br><small class="soft">${HK.esc(i.opt)}</small>` : ""}<br><button class="rm" type="button" data-rm="${k}">Quitar</button></div>
+      <div class="qty"><button type="button" data-q="${k}" data-d="-1" aria-label="Una menos">−</button><input value="${i.qty}" readonly aria-label="Cantidad"><button type="button" data-q="${k}" data-d="1" aria-label="Una más">+</button></div>
       <b class="num">${euro(p.price * i.qty)}</b></div>`; }).join("");
   document.getElementById("sub").textContent = euro(Cart.subtotal());
   document.getElementById("discRow").hidden = !coupon;
@@ -94,7 +94,7 @@ function render() {
 }
 document.getElementById("lines").addEventListener("click", e => {
   const q = e.target.closest("[data-q]"), r = e.target.closest("[data-rm]");
-  if (q) { const it = Cart.items().find(i => i.id === q.dataset.q); Cart.set(q.dataset.q, it.qty + Number(q.dataset.d)); render(); }
+  if (q) { const it = Cart.items().find(i => Cart.key(i) === q.dataset.q); if (it) Cart.set(q.dataset.q, it.qty + Number(q.dataset.d)); render(); }
   if (r) { Cart.set(r.dataset.rm, 0); render(); }
 });
 render();

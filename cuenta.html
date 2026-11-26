@@ -22,7 +22,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=6">
+<link rel="stylesheet" href="assets/styles.css?v=8">
 </head>
 <body data-page="cuenta">
 <header id="site-header"></header>
@@ -80,7 +80,7 @@
   </section>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/app.js?v=10"></script>
+<script src="assets/app.js?v=11"></script>
 <script>
 (async () => {
   await HK.whenSupa();
@@ -196,7 +196,7 @@
     const canReturn = x => ["enviado", "entregado"].includes(x.status) && !open(x.id) && (!x.delivered_at || Date.now() - new Date(x.delivered_at) < 14 * 864e5);
     $("hOrders").innerHTML = orders.map(x => `<div class="hcard">
         <div class="hrow"><b>${num(x.number)}</b>${chip(x.status)}<span class="soft">${fecha(x.created_at)}</span><b class="num" style="margin-left:auto">${euro(Number(x.total))}</b></div>
-        <ul class="hitems">${(x.items || []).map(i => `<li>${i.qty} × ${HK.esc(i.name)}</li>`).join("")}</ul>
+        <ul class="hitems">${(x.items || []).map(i => `<li>${i.qty} × ${HK.esc(i.name)}${i.opt ? ` <small class="soft">(${HK.esc(i.opt)})</small>` : ""}</li>`).join("")}</ul>
         ${x.coupon ? `<p class="soft" style="margin:4px 0 0">Cupón ${HK.esc(x.coupon)}: −${euro(Number(x.discount))}</p>` : ""}
         ${track(x)}
         ${canReturn(x) ? `<button class="linkbtn" type="button" data-ret="${x.id}" style="margin-top:8px">Solicitar devolución</button>
